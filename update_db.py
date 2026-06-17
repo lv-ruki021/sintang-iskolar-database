@@ -1,25 +1,23 @@
 import os
-import mysql.connector
+import pymysql
 from dotenv import load_dotenv
 
 # Load environmental variables
 load_dotenv()
 
 def update_schema():
-    config = {
-        'host': os.getenv('TIDB_HOST'),
-        'port': int(os.getenv('TIDB_PORT', 4000)),
-        'user': os.getenv('TIDB_USER'),
-        'password': os.getenv('TIDB_PASSWORD'),
-        'database': os.getenv('TIDB_DATABASE'),
-        'ssl_verify_cert': False
-    }
-    
     conn = None
     cursor = None
     try:
         print("Connecting to TiDB database...")
-        conn = mysql.connector.connect(**config)
+        conn = pymysql.connect(
+            host=os.getenv('TIDB_HOST'),
+            port=int(os.getenv('TIDB_PORT', 4000)),
+            user=os.getenv('TIDB_USER'),
+            password=os.getenv('TIDB_PASSWORD'),
+            database=os.getenv('TIDB_DATABASE'),
+            ssl={'ssl_check_hostname': False}
+        )
         cursor = conn.cursor()
         
         # Add new columns to Student table
@@ -36,11 +34,13 @@ def update_schema():
                 # Attempt to add column
                 cursor.execute(f"ALTER TABLE Student ADD COLUMN `{col_name}` {col_type}")
                 print(f"Column `{col_name}` added successfully.")
-            except mysql.connector.Error as err:
-                if err.errno == 1060: # Duplicate column name
+            except pymysql.Error as err:
+                errno = err.args[0] if len(err.args) > 0 else None
+                if errno == 1060: # Duplicate column name
                     print(f"Column `{col_name}` already exists.")
                 else:
-                    print(f"Error adding column `{col_name}`: {err.msg}")
+                    errmsg = err.args[1] if len(err.args) > 1 else str(err)
+                    print(f"Error adding column `{col_name}`: {errmsg}")
                     
         conn.commit()
         print("Database migration completed successfully!")

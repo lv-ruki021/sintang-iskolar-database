@@ -1,22 +1,20 @@
 import os
-import mysql.connector
+import pymysql
 from dotenv import load_dotenv
 
 # Load environmental variables
 load_dotenv()
 
 def inspect():
-    config = {
-        'host': os.getenv('TIDB_HOST'),
-        'port': int(os.getenv('TIDB_PORT', 4000)),
-        'user': os.getenv('TIDB_USER'),
-        'password': os.getenv('TIDB_PASSWORD'),
-        'ssl_verify_cert': False
-    }
-    
     try:
         print("Connecting to TiDB server...")
-        conn = mysql.connector.connect(**config)
+        conn = pymysql.connect(
+            host=os.getenv('TIDB_HOST'),
+            port=int(os.getenv('TIDB_PORT', 4000)),
+            user=os.getenv('TIDB_USER'),
+            password=os.getenv('TIDB_PASSWORD'),
+            ssl={'ssl_check_hostname': False}
+        )
         cursor = conn.cursor()
         
         # Show all databases
