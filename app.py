@@ -1,7 +1,8 @@
 import os
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-import mysql.connector
+import pymysql
+import pymysql.cursors
 from dotenv import load_dotenv
 from datetime import datetime
 
@@ -77,7 +78,7 @@ def applicant_login():
         cursor = None
         try:
             conn = get_db_connection()
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor(pymysql.cursors.DictCursor)
             cursor.execute(
                 "SELECT * FROM Student WHERE Student_ID = %s AND Email_Address = %s",
                 (student_id, email)
@@ -115,7 +116,7 @@ def applicant_view(student_id):
     cursor = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         cursor.execute("SELECT * FROM Student WHERE Student_ID = %s", (student_id,))
         student = cursor.fetchone()
         if not student:
@@ -168,15 +169,14 @@ def get_db_connection():
     """
     Establish a connection to the TiDB Database.
     """
-    config = {
-        'host': os.getenv('TIDB_HOST'),
-        'port': int(os.getenv('TIDB_PORT', 4000)),
-        'user': os.getenv('TIDB_USER'),
-        'password': os.getenv('TIDB_PASSWORD'),
-        'database': os.getenv('TIDB_DATABASE'),
-        'ssl_verify_cert': False
-    }
-    return mysql.connector.connect(**config)
+    return pymysql.connect(
+        host=os.getenv('TIDB_HOST'),
+        port=int(os.getenv('TIDB_PORT', 4000)),
+        user=os.getenv('TIDB_USER'),
+        password=os.getenv('TIDB_PASSWORD'),
+        database=os.getenv('TIDB_DATABASE'),
+        ssl={'ssl_check_hostname': False}
+    )
 
 def clean_input(val, is_num=False, is_date=False):
     """
@@ -211,7 +211,7 @@ def index():
     cursor = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         # Fetch all students
         cursor.execute("SELECT * FROM Student ORDER BY Student_ID ASC")
@@ -415,14 +415,16 @@ def apply():
             flash(f"Scholar applicant `{name}` (ID: {student_id}) successfully registered! You can now add family, school, and extracurricular details below.", "success")
             return redirect(url_for('applicant_view', student_id=student_id))
             
-        except mysql.connector.Error as err:
-            if err.errno == 1062:
-                if "PRIMARY" in err.msg or "Student_ID" in err.msg:
+        except pymysql.Error as err:
+            errno = err.args[0] if len(err.args) > 0 else None
+            errmsg = err.args[1] if len(err.args) > 1 else str(err)
+            if errno == 1062:
+                if "PRIMARY" in errmsg or "Student_ID" in errmsg:
                     flash(f"Student ID `{student_id}` is already registered.", "danger")
                 else:
                     flash("An applicant with this Email Address is already registered.", "danger")
             else:
-                flash(f"Database error: {err.msg}", "danger")
+                flash(f"Database error: {errmsg}", "danger")
             return render_template('add_scholar.html', form_data=request.form)
         except Exception as e:
             flash(f"System error: {str(e)}", "danger")
@@ -447,7 +449,7 @@ def admin_edit(id):
     
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         cursor.execute("SELECT * FROM Student WHERE Student_ID = %s", (id,))
         student = cursor.fetchone()
         
@@ -624,11 +626,13 @@ def admin_edit(id):
             flash(f"Scholar `{name}` (ID: {id}) successfully updated!", "success")
             return redirect(url_for('index'))
             
-        except mysql.connector.Error as err:
-            if err.errno == 1062:
+        except pymysql.Error as err:
+            errno = err.args[0] if len(err.args) > 0 else None
+            errmsg = err.args[1] if len(err.args) > 1 else str(err)
+            if errno == 1062:
                 flash("An applicant with this Email Address is already registered.", "danger")
             else:
-                flash(f"Database error: {err.msg}", "danger")
+                flash(f"Database error: {errmsg}", "danger")
             form_dict = dict(request.form)
             form_dict['Student_ID'] = id
             return render_template('edit_scholar.html', student=form_dict)
@@ -656,7 +660,7 @@ def admin_view(id):
     cursor = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         # 1. Fetch Student profile
         cursor.execute("SELECT * FROM Student WHERE Student_ID = %s", (id,))
