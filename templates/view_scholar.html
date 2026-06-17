@@ -1,0 +1,618 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ student.Name }} | Scholar Dossier{% endblock %}
+
+{% block content %}
+<div class="dossier-wrapper" id="scholar-dossier-container">
+    
+    <!-- Navigation & Main Action Controls -->
+    <div class="dossier-nav-bar">
+        <a href="{{ url_for('index') }}" class="back-link" id="btn-back-dashboard">
+            <i class="fa-solid fa-arrow-left-long"></i> Back to Dashboard
+        </a>
+        <div class="dossier-actions">
+            <a href="{{ url_for('edit', id=student.Student_ID) }}" class="btn btn-secondary" id="btn-dossier-edit">
+                <i class="fa-solid fa-user-pen"></i> Edit Profile
+            </a>
+            <form action="{{ url_for('delete', id=student.Student_ID) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this applicant profile? This action will permanently remove all family, school, and extracurricular history.');">
+                <button type="submit" class="btn btn-danger-action" id="btn-dossier-delete">
+                    <i class="fa-solid fa-trash-can"></i> Delete Profile
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Header Summary Card -->
+    <div class="dossier-header-card" id="dossier-header-section">
+        <div class="profile-banner-avatar" style="background-color: var(--avatar-color-{{ (student.Age % 5) + 1 if student.Age else 1 }});">
+            {{ student.Name[0] | upper if student.Name else 'S' }}
+        </div>
+        <div class="profile-banner-info">
+            <div class="banner-title-row">
+                <h2>{{ student.Name }}</h2>
+                <div class="badge-row">
+                    <span class="status-pill status-{{ 'approved' if student.Scholarship_Type == 'Merit' else 'pending' }}">
+                        <span class="status-dot"></span>
+                        {{ student.Scholarship_Type }}
+                    </span>
+                    <span class="classification-tag class-{{ student.Scholar_Classification | lower }}">
+                        {{ student.Scholar_Classification }}
+                        {% if student.Scholar_Sub_Classification %}
+                            ({{ student.Scholar_Sub_Classification }})
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            <p class="banner-subtext"><i class="fa-solid fa-id-card"></i> Student ID: <strong>{{ student.Student_ID }}</strong> &bull; <span class="badge badge-info">Regular Student</span></p>
+            <p class="banner-subtext"><i class="fa-solid fa-school"></i> {{ student.College_Enrolled }} &bull; {{ student.Program }} ({{ student.Year_and_Section }})</p>
+        </div>
+    </div>
+
+    <!-- Main Dossier Content Tabs -->
+    <div class="dossier-tabs-container">
+        <div class="dossier-tab-headers">
+            <button class="tab-btn active" onclick="switchDossierTab('profile-details')"><i class="fa-solid fa-user-check"></i> Profile Dossier</button>
+            <button class="tab-btn" onclick="switchDossierTab('family-details')"><i class="fa-solid fa-people-roof"></i> Family Background ({{ family|length }})</button>
+            <button class="tab-btn" onclick="switchDossierTab('school-details')"><i class="fa-solid fa-building-columns"></i> Education History ({{ schools|length }})</button>
+            <button class="tab-btn" onclick="switchDossierTab('extracur-details')"><i class="fa-solid fa-medal"></i> Extra-Curriculars ({{ extracurs|length }})</button>
+        </div>
+
+        <!-- TAB 1: Profile Details -->
+        <div class="dossier-tab-content active" id="profile-details">
+            <div class="dossier-grid">
+                
+                <!-- Box 1: Demographics -->
+                <div class="info-box">
+                    <div class="box-header"><i class="fa-solid fa-fingerprint"></i> Demographics</div>
+                    <div class="box-body">
+                        <table class="details-list-table">
+                            <tr><th>Date of Birth:</th><td>{{ student.Date_of_Birth if student.Date_of_Birth else 'Not specified' }}</td></tr>
+                            <tr><th>Age:</th><td>{{ student.Age if student.Age else 'Not specified' }}</td></tr>
+                            <tr><th>Civil Status:</th><td>{{ student.Civil_Status }}</td></tr>
+                            <tr><th>Citizenship:</th><td>{{ student.Citizenship }}</td></tr>
+                            <tr><th>Religion:</th><td>{{ student.Religion if student.Religion else 'Not specified' }}</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Box 2: Contacts -->
+                <div class="info-box">
+                    <div class="box-header"><i class="fa-solid fa-address-book"></i> Contact & Addresses</div>
+                    <div class="box-body">
+                        <table class="details-list-table">
+                            <tr><th>Email Address:</th><td>{{ student.Email_Address if student.Email_Address else 'Not specified' }}</td></tr>
+                            <tr><th>Mobile Number:</th><td>{{ student.Mobile_Number if student.Mobile_Number else 'Not specified' }}</td></tr>
+                            <tr><th>Landline:</th><td>{{ student.Landline if student.Landline else 'Not specified' }}</td></tr>
+                            <tr><th>Home Address:</th><td class="address-text">{{ student.Address }}</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Box 3: Socio-Economic Profile -->
+                <div class="info-box">
+                    <div class="box-header"><i class="fa-solid fa-hand-holding-dollar"></i> Socio-Economic Profile</div>
+                    <div class="box-body">
+                        <table class="details-list-table">
+                            <tr><th>Working Student:</th><td>{{ 'Yes' if student.Working_Student == 1 else 'No' }}</td></tr>
+                            {% if student.Working_Student == 1 %}
+                                <tr><th>Job Title:</th><td>{{ student.Job_Title }}</td></tr>
+                            {% endif %}
+                            <tr><th>Annual Household Income:</th><td>{{ "₱{:,.2f}".format(student.Total_Annual_Household_Income) if student.Total_Annual_Household_Income is not none else 'Not specified' }}</td></tr>
+                            <tr><th>House Ownership:</th><td>{{ student.House_Ownership if student.House_Ownership else 'Not specified' }}</td></tr>
+                            <tr><th>Owns a Vehicle:</th><td>{{ '1 Primary Vehicle (High Priority)' if student.Family_own_a_vehicle == 1 else 'No vehicles' }}</td></tr>
+                            <tr><th>Other Scholarships:</th><td>{{ student.Other_Scholarship_Cleaned if student.Other_Scholarship_Cleaned else 'None' }}</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Box 4: Academic Documents -->
+                <div class="info-box">
+                    <div class="box-header"><i class="fa-solid fa-file-shield"></i> Document Checklist</div>
+                    <div class="box-body">
+                        <table class="details-list-table">
+                            <tr><th>Proof of Income:</th><td><span class="file-badge"><i class="fa-regular fa-file-lines"></i> {{ student.Proof_of_Income }}</span></td></tr>
+                            {% if student.Scholar_Classification == 'Freshmen' %}
+                                <tr><th>Grade 11 GWA:</th><td><strong class="text-gwa">{{ student.Grade_11_GWA }}%</strong></td></tr>
+                                <tr><th>Grade 12 GWA:</th><td><strong class="text-gwa">{{ student.Grade_12_GWA }}%</strong></td></tr>
+                                <tr><th>FORM 137:</th><td><span class="file-badge"><i class="fa-regular fa-file-pdf"></i> {{ student.FORM137 }}</span></td></tr>
+                            {% elif student.Scholar_Classification == 'Upperclassman' %}
+                                <tr><th>College GWA:</th><td><strong class="text-gwa">{{ student.College_GWA }}</strong></td></tr>
+                                <tr><th>Lowest Subject Grade:</th><td><strong class="text-gwa">{{ student.Lowest_Subject_Grade }}</strong></td></tr>
+                                <tr><th>COR File Name:</th><td><span class="file-badge"><i class="fa-regular fa-file-pdf"></i> {{ student.COR }}</span></td></tr>
+                                <tr><th>CTC File Name:</th><td><span class="file-badge"><i class="fa-regular fa-file-pdf"></i> {{ student.CTC }}</span></td></tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: Family Background -->
+        <div class="dossier-tab-content" id="family-details">
+            <div class="relation-header">
+                <h3>Family Background Directory</h3>
+                <button class="btn btn-sm btn-primary" onclick="toggleRelationForm('add-family-form-box')"><i class="fa-solid fa-plus"></i> Add Family Member</button>
+            </div>
+            
+            <!-- Add Family Form Box -->
+            <div id="add-family-form-box" class="relation-form-box" style="display:none;">
+                <h4><i class="fa-solid fa-user-plus"></i> Add Family Member Info</h4>
+                <form action="{{ url_for('add_family', student_id=student.Student_ID) }}" method="POST" class="relation-form">
+                    <div class="form-row">
+                        <div class="form-group col-4">
+                            <label for="Member_Role">Relationship Role *</label>
+                            <select name="Member_Role" required>
+                                <option value="Father">Father</option>
+                                <option value="Mother">Mother</option>
+                                <option value="Sibling">Sibling</option>
+                                <option value="Relative">Relative</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-4">
+                            <label for="Member_Name">Full Name *</label>
+                            <input type="text" name="Member_Name" placeholder="Enter Full Name" required maxlength="100">
+                        </div>
+                        <div class="form-group col-4">
+                            <label for="Member_Age">Age</label>
+                            <input type="number" name="Member_Age" placeholder="Age" min="0" max="99">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-4">
+                            <label for="Member_Mobile_Number">Mobile Number</label>
+                            <input type="text" name="Member_Mobile_Number" placeholder="e.g. 09123456789" minlength="11" maxlength="11">
+                        </div>
+                        <div class="form-group col-4">
+                            <label for="Member_Civil_Status">Civil Status</label>
+                            <select name="Member_Civil_Status">
+                                <option value="">Select status</option>
+                                <option value="Single">Single</option>
+                                <option value="Married">Married</option>
+                                <option value="Widowed">Widowed</option>
+                                <option value="Divorced">Divorced</option>
+                                <option value="Separated">Separated</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-4 checkbox-container" style="padding-top: 32px;">
+                            <label class="custom-checkbox-label">
+                                <input type="checkbox" name="Member_Employed" value="1">
+                                <span>Is Employed?</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-4">
+                            <label for="Member_Course_or_Occupation">Occupation / Course</label>
+                            <input type="text" name="Member_Course_or_Occupation" placeholder="Occupation or course study" maxlength="100">
+                        </div>
+                        <div class="form-group col-4">
+                            <label for="Member_School_or_Employer">School / Employer Name</label>
+                            <input type="text" name="Member_School_or_Employer" placeholder="School or employer" maxlength="100">
+                        </div>
+                        <div class="form-group col-4">
+                            <label for="Member_Monthly_Income">Monthly Income</label>
+                            <input type="number" name="Member_Monthly_Income" placeholder="Monthly income" step="0.01" min="0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-4">
+                            <label for="Member_Department">Department</label>
+                            <input type="text" name="Member_Department" placeholder="Department" maxlength="100">
+                        </div>
+                        <div class="form-group col-4">
+                            <label for="Member_Position">Job Position</label>
+                            <input type="text" name="Member_Position" placeholder="Job title/position" maxlength="100">
+                        </div>
+                        <div class="form-group col-4 checkbox-container" style="padding-top: 32px;">
+                            <label class="custom-checkbox-label">
+                                <input type="checkbox" name="Member_With_Own_Business" value="1">
+                                <span>Owns a business?</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="Member_Office_or_Business_Name_Address">Office or Business Address</label>
+                        <input type="text" name="Member_Office_or_Business_Name_Address" placeholder="Office / Business address details" maxlength="300">
+                    </div>
+                    <div class="form-actions-bar">
+                        <button type="button" class="btn btn-secondary" onclick="toggleRelationForm('add-family-form-box')">Cancel</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Member</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Family Table -->
+            <div class="table-responsive">
+                {% if family %}
+                    <table class="relation-data-table">
+                        <thead>
+                            <tr>
+                                <th>Role</th>
+                                <th>Name</th>
+                                <th>Age</th>
+                                <th>Mobile</th>
+                                <th>Civil Status</th>
+                                <th>Occupation</th>
+                                <th>Employed</th>
+                                <th>Income</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member in family %}
+                                <tr>
+                                    <td><strong>{{ member.Member_Role }}</strong></td>
+                                    <td>{{ member.Member_Name }}</td>
+                                    <td>{{ member.Member_Age if member.Member_Age else 'N/A' }}</td>
+                                    <td>{{ member.Member_Mobile_Number if member.Member_Mobile_Number else 'N/A' }}</td>
+                                    <td>{{ member.Member_Civil_Status if member.Member_Civil_Status else 'N/A' }}</td>
+                                    <td>{{ member.Member_Course_or_Occupation if member.Member_Course_or_Occupation else 'N/A' }}</td>
+                                    <td>{{ 'Yes' if member.Member_Employed == 1 else 'No' }}</td>
+                                    <td>{{ "₱{:,.2f}".format(member.Member_Monthly_Income) if member.Member_Monthly_Income else '₱0.00' }}</td>
+                                    <td class="text-right">
+                                        <div class="actions-group-relation" style="display: flex; gap: 8px; justify-content: flex-end;">
+                                            <button class="action-btn edit" onclick="toggleRelationForm('edit-family-{{ member.Family_ID }}')"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                                            <form action="{{ url_for('delete_relation', student_id=student.Student_ID, relation='family', id=member.Family_ID) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this family member?');" style="display:inline;">
+                                                <button type="submit" class="action-btn delete" title="Remove Member"><i class="fa-solid fa-trash-can"></i> Remove</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Edit Family Form Row -->
+                                <tr id="edit-family-{{ member.Family_ID }}" style="display:none; background-color: #fafafa;">
+                                    <td colspan="9" style="padding: 20px; text-align: left;">
+                                        <div class="relation-form-box" style="display:block; margin: 0; max-width: 100%;">
+                                            <h4 style="margin-bottom: 15px;"><i class="fa-solid fa-user-pen"></i> Edit Family Member Info</h4>
+                                            <form action="{{ url_for('edit_family', student_id=student.Student_ID, id=member.Family_ID) }}" method="POST" class="relation-form">
+                                                <div class="form-row">
+                                                    <div class="form-group col-4">
+                                                        <label>Relationship Role *</label>
+                                                        <select name="Member_Role" required>
+                                                            <option value="Father" {% if member.Member_Role == 'Father' %}selected{% endif %}>Father</option>
+                                                            <option value="Mother" {% if member.Member_Role == 'Mother' %}selected{% endif %}>Mother</option>
+                                                            <option value="Sibling" {% if member.Member_Role == 'Sibling' %}selected{% endif %}>Sibling</option>
+                                                            <option value="Relative" {% if member.Member_Role == 'Relative' %}selected{% endif %}>Relative</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group col-4">
+                                                        <label>Full Name *</label>
+                                                        <input type="text" name="Member_Name" value="{{ member.Member_Name }}" required maxlength="100">
+                                                    </div>
+                                                    <div class="form-group col-4">
+                                                        <label>Age</label>
+                                                        <input type="number" name="Member_Age" value="{{ member.Member_Age if member.Member_Age else '' }}" min="0" max="99">
+                                                    </div>
+                                                </div>
+                                                <div class="form-row">
+                                                    <div class="form-group col-4">
+                                                        <label>Mobile Number</label>
+                                                        <input type="text" name="Member_Mobile_Number" value="{{ member.Member_Mobile_Number if member.Member_Mobile_Number else '' }}" minlength="11" maxlength="11">
+                                                    </div>
+                                                    <div class="form-group col-4">
+                                                        <label>Civil Status</label>
+                                                        <select name="Member_Civil_Status">
+                                                            <option value="">Select status</option>
+                                                            <option value="Single" {% if member.Member_Civil_Status == 'Single' %}selected{% endif %}>Single</option>
+                                                            <option value="Married" {% if member.Member_Civil_Status == 'Married' %}selected{% endif %}>Married</option>
+                                                            <option value="Widowed" {% if member.Member_Civil_Status == 'Widowed' %}selected{% endif %}>Widowed</option>
+                                                            <option value="Divorced" {% if member.Member_Civil_Status == 'Divorced' %}selected{% endif %}>Divorced</option>
+                                                            <option value="Separated" {% if member.Member_Civil_Status == 'Separated' %}selected{% endif %}>Separated</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group col-4 checkbox-container" style="padding-top: 32px;">
+                                                        <label class="custom-checkbox-label">
+                                                            <input type="checkbox" name="Member_Employed" value="1" {% if member.Member_Employed == 1 %}checked{% endif %}>
+                                                            <span>Is Employed?</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="form-row">
+                                                    <div class="form-group col-4">
+                                                        <label>Occupation / Course</label>
+                                                        <input type="text" name="Member_Course_or_Occupation" value="{{ member.Member_Course_or_Occupation if member.Member_Course_or_Occupation else '' }}" maxlength="100">
+                                                    </div>
+                                                    <div class="form-group col-4">
+                                                        <label>School / Employer Name</label>
+                                                        <input type="text" name="Member_School_or_Employer" value="{{ member.Member_School_or_Employer if member.Member_School_or_Employer else '' }}" maxlength="100">
+                                                    </div>
+                                                    <div class="form-group col-4">
+                                                        <label>Monthly Income</label>
+                                                        <input type="number" name="Member_Monthly_Income" value="{{ member.Member_Monthly_Income if member.Member_Monthly_Income else '' }}" step="0.01" min="0">
+                                                    </div>
+                                                </div>
+                                                <div class="form-row">
+                                                    <div class="form-group col-4">
+                                                        <label>Department</label>
+                                                        <input type="text" name="Member_Department" value="{{ member.Member_Department if member.Member_Department else '' }}" maxlength="100">
+                                                    </div>
+                                                    <div class="form-group col-4">
+                                                        <label>Job Position</label>
+                                                        <input type="text" name="Member_Position" value="{{ member.Member_Position if member.Member_Position else '' }}" maxlength="100">
+                                                    </div>
+                                                    <div class="form-group col-4 checkbox-container" style="padding-top: 32px;">
+                                                        <label class="custom-checkbox-label">
+                                                            <input type="checkbox" name="Member_With_Own_Business" value="1" {% if member.Member_With_Own_Business == 1 %}checked{% endif %}>
+                                                            <span>Owns a business?</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Office or Business Address</label>
+                                                    <input type="text" name="Member_Office_or_Business_Name_Address" value="{{ member.Member_Office_or_Business_Name_Address if member.Member_Office_or_Business_Name_Address else '' }}" maxlength="300">
+                                                </div>
+                                                <div class="form-actions-bar">
+                                                    <button type="button" class="btn btn-secondary" onclick="toggleRelationForm('edit-family-{{ member.Family_ID }}')">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Update Member</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="relation-empty-state">
+                        <p><i class="fa-solid fa-people-arrows"></i> No family background details registered for this student yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- TAB 3: Education History -->
+        <div class="dossier-tab-content" id="school-details">
+            <div class="relation-header">
+                <h3>Historical Schools Attended</h3>
+                <button class="btn btn-sm btn-primary" onclick="toggleRelationForm('add-school-form-box')"><i class="fa-solid fa-plus"></i> Add School Record</button>
+            </div>
+
+            <!-- Add School Form Box -->
+            <div id="add-school-form-box" class="relation-form-box" style="display:none;">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Add School History</h4>
+                <form action="{{ url_for('add_school', student_id=student.Student_ID) }}" method="POST" class="relation-form">
+                    <div class="form-row">
+                        <div class="form-group col-4">
+                            <label for="History_Education_Level">Education Level *</label>
+                            <select name="History_Education_Level" required>
+                                <option value="Primary">Primary (Elementary)</option>
+                                <option value="Secondary">Secondary (High School)</option>
+                                <option value="Other Institution">Other Institution</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-4">
+                            <label for="School_Name">School Name *</label>
+                            <input type="text" name="School_Name" placeholder="School Name" required maxlength="100">
+                        </div>
+                        <div class="form-group col-4">
+                            <label for="School_Address">School Address *</label>
+                            <input type="text" name="School_Address" placeholder="Complete address of school" required maxlength="255">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-4">
+                            <label for="School_From">Year From (YYYY)</label>
+                            <input type="number" name="School_From" placeholder="e.g. 2018" min="1990" max="2030">
+                        </div>
+                        <div class="form-group col-4">
+                            <label for="School_To">Year To (YYYY)</label>
+                            <input type="number" name="School_To" placeholder="e.g. 2024" min="1990" max="2030">
+                        </div>
+                        <div class="form-group col-4">
+                            <label for="School_Honors">Honors / Distinctions Received</label>
+                            <input type="text" name="School_Honors" placeholder="e.g. Class Valedictorian, With Honors" maxlength="200">
+                        </div>
+                    </div>
+                    <div class="form-actions-bar">
+                        <button type="button" class="btn btn-secondary" onclick="toggleRelationForm('add-school-form-box')">Cancel</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Record</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Schools Table -->
+            <div class="table-responsive">
+                {% if schools %}
+                    <table class="relation-data-table">
+                        <thead>
+                            <tr>
+                                <th>Education Level</th>
+                                <th>School Name</th>
+                                <th>School Address</th>
+                                <th>Years Attended</th>
+                                <th>Honors / Awards</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for school in schools %}
+                                <tr>
+                                    <td><strong>{{ school.History_Education_Level }}</strong></td>
+                                    <td>{{ school.School_Name }}</td>
+                                    <td>{{ school.School_Address }}</td>
+                                    <td>{{ school.School_From }} &mdash; {{ school.School_To if school.School_To else 'Present' }}</td>
+                                    <td>{{ school.School_Honors if school.School_Honors else 'None' }}</td>
+                                    <td class="text-right">
+                                        <div class="actions-group-relation" style="display: flex; gap: 8px; justify-content: flex-end;">
+                                            <button class="action-btn edit" onclick="toggleRelationForm('edit-school-{{ school.School_ID }}')"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                                            <form action="{{ url_for('delete_relation', student_id=student.Student_ID, relation='school', id=school.School_ID) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this educational record?');" style="display:inline;">
+                                                <button type="submit" class="action-btn delete" title="Remove Record"><i class="fa-solid fa-trash-can"></i> Remove</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Edit School Form Row -->
+                                <tr id="edit-school-{{ school.School_ID }}" style="display:none; background-color: #fafafa;">
+                                    <td colspan="6" style="padding: 20px; text-align: left;">
+                                        <div class="relation-form-box" style="display:block; margin: 0; max-width: 100%;">
+                                            <h4 style="margin-bottom: 15px;"><i class="fa-solid fa-user-pen"></i> Edit School Record</h4>
+                                            <form action="{{ url_for('edit_school', student_id=student.Student_ID, id=school.School_ID) }}" method="POST" class="relation-form">
+                                                <div class="form-row">
+                                                    <div class="form-group col-4">
+                                                        <label>Education Level *</label>
+                                                        <select name="History_Education_Level" required>
+                                                            <option value="Primary" {% if school.History_Education_Level == 'Primary' %}selected{% endif %}>Primary (Elementary)</option>
+                                                            <option value="Secondary" {% if school.History_Education_Level == 'Secondary' %}selected{% endif %}>Secondary (High School)</option>
+                                                            <option value="Other Institution" {% if school.History_Education_Level == 'Other Institution' %}selected{% endif %}>Other Institution</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group col-4">
+                                                        <label>School Name *</label>
+                                                        <input type="text" name="School_Name" value="{{ school.School_Name }}" required maxlength="100">
+                                                    </div>
+                                                    <div class="form-group col-4">
+                                                        <label>School Address *</label>
+                                                        <input type="text" name="School_Address" value="{{ school.School_Address }}" required maxlength="255">
+                                                    </div>
+                                                </div>
+                                                <div class="form-row">
+                                                    <div class="form-group col-4">
+                                                        <label>Year From (YYYY)</label>
+                                                        <input type="number" name="School_From" value="{{ school.School_From if school.School_From else '' }}" min="1990" max="2030">
+                                                    </div>
+                                                    <div class="form-group col-4">
+                                                        <label>Year To (YYYY)</label>
+                                                        <input type="number" name="School_To" value="{{ school.School_To if school.School_To else '' }}" min="1990" max="2030">
+                                                    </div>
+                                                    <div class="form-group col-4">
+                                                        <label>Honors / Distinctions Received</label>
+                                                        <input type="text" name="School_Honors" value="{{ school.School_Honors if school.School_Honors else '' }}" maxlength="200">
+                                                    </div>
+                                                </div>
+                                                <div class="form-actions-bar">
+                                                    <button type="button" class="btn btn-secondary" onclick="toggleRelationForm('edit-school-{{ school.School_ID }}')">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Update Record</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="relation-empty-state">
+                        <p><i class="fa-solid fa-school-flag"></i> No educational history records registered for this student yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- TAB 4: Extra-Curriculars -->
+        <div class="dossier-tab-content" id="extracur-details">
+            <div class="relation-header">
+                <h3>Extra-Curricular Organizations & Honors</h3>
+                <button class="btn btn-sm btn-primary" onclick="toggleRelationForm('add-extracur-form-box')"><i class="fa-solid fa-plus"></i> Add Activity</button>
+            </div>
+
+            <!-- Add Extra-Curricular Form Box -->
+            <div id="add-extracur-form-box" class="relation-form-box" style="display:none;">
+                <h4><i class="fa-solid fa-award"></i> Add Extracurricular Log</h4>
+                <form action="{{ url_for('add_extracur', student_id=student.Student_ID) }}" method="POST" class="relation-form">
+                    <div class="form-row">
+                        <div class="form-group col-4">
+                            <label for="Extra_Curricular_Name">Organization / Event Name *</label>
+                            <input type="text" name="Extra_Curricular_Name" placeholder="e.g. Student Council" required maxlength="100">
+                        </div>
+                        <div class="form-group col-4">
+                            <label for="Extra_Curricular_Position">Position / Award</label>
+                            <input type="text" name="Extra_Curricular_Position" placeholder="e.g. Vice President, Champion" maxlength="50">
+                        </div>
+                        <div class="form-group col-4">
+                            <label for="Extra_Curricular_Year">Year Span (Format: YYYY-YYYY)</label>
+                            <input type="text" name="Extra_Curricular_Year" placeholder="e.g. 2023-2024" maxlength="9">
+                        </div>
+                    </div>
+                    <div class="form-actions-bar">
+                        <button type="button" class="btn btn-secondary" onclick="toggleRelationForm('add-extracur-form-box')">Cancel</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Activity</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Activities Table -->
+            <div class="table-responsive">
+                {% if extracurs %}
+                    <table class="relation-data-table">
+                        <thead>
+                            <tr>
+                                <th>Year Span</th>
+                                <th>Activity Name / Organization</th>
+                                <th>Position / Role</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for act in extracurs %}
+                                <tr>
+                                    <td><span class="date-text">{{ act.Extra_Curricular_Year if act.Extra_Curricular_Year else 'N/A' }}</span></td>
+                                    <td><strong>{{ act.Extra_Curricular_Name }}</strong></td>
+                                    <td>{{ act.Extra_Curricular_Position if act.Extra_Curricular_Position else 'Member' }}</td>
+                                    <td class="text-right">
+                                        <div class="actions-group-relation" style="display: flex; gap: 8px; justify-content: flex-end;">
+                                            <button class="action-btn edit" onclick="toggleRelationForm('edit-extracur-{{ act.Extra_Curricular_ID }}')"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                                            <form action="{{ url_for('delete_relation', student_id=student.Student_ID, relation='extracur', id=act.Extra_Curricular_ID) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this activity?');" style="display:inline;">
+                                                <button type="submit" class="action-btn delete" title="Remove Activity"><i class="fa-solid fa-trash-can"></i> Remove</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Edit Extra-Curricular Form Row -->
+                                <tr id="edit-extracur-{{ act.Extra_Curricular_ID }}" style="display:none; background-color: #fafafa;">
+                                    <td colspan="4" style="padding: 20px; text-align: left;">
+                                        <div class="relation-form-box" style="display:block; margin: 0; max-width: 100%;">
+                                            <h4 style="margin-bottom: 15px;"><i class="fa-solid fa-user-pen"></i> Edit Extracurricular Log</h4>
+                                            <form action="{{ url_for('edit_extracur', student_id=student.Student_ID, id=act.Extra_Curricular_ID) }}" method="POST" class="relation-form">
+                                                <div class="form-row">
+                                                    <div class="form-group col-4">
+                                                        <label>Organization / Event Name *</label>
+                                                        <input type="text" name="Extra_Curricular_Name" value="{{ act.Extra_Curricular_Name }}" required maxlength="100">
+                                                    </div>
+                                                    <div class="form-group col-4">
+                                                        <label>Position / Role</label>
+                                                        <input type="text" name="Extra_Curricular_Position" value="{{ act.Extra_Curricular_Position if act.Extra_Curricular_Position else '' }}" maxlength="50">
+                                                    </div>
+                                                    <div class="form-group col-4">
+                                                        <label>Year Span (Format: YYYY-YYYY)</label>
+                                                        <input type="text" name="Extra_Curricular_Year" value="{{ act.Extra_Curricular_Year if act.Extra_Curricular_Year else '' }}" maxlength="9">
+                                                    </div>
+                                                </div>
+                                                <div class="form-actions-bar">
+                                                    <button type="button" class="btn btn-secondary" onclick="toggleRelationForm('edit-extracur-{{ act.Extra_Curricular_ID }}')">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Update Activity</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="relation-empty-state">
+                        <p><i class="fa-solid fa-medal"></i> No extracurricular logs registered for this student yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchDossierTab(tabId) {
+        const panels = document.querySelectorAll('.dossier-tab-content');
+        panels.forEach(p => p.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        
+        const buttons = document.querySelectorAll('.tab-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        
+        event.currentTarget.classList.add('active');
+    }
+
+    function toggleRelationForm(formBoxId) {
+        const formBox = document.getElementById(formBoxId);
+        const displayType = formBox.tagName === 'TR' ? 'table-row' : 'block';
+        formBox.style.display = (formBox.style.display === 'none' || formBox.style.display === '') ? displayType : 'none';
+    }
+</script>
+{% endblock %}

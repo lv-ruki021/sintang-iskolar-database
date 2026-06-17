@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | Sintang Iskolar Database{% endblock %}
+
+{% block content %}
+<div class="dashboard-header" id="dashboard-header-section">
+    <div>
+        <h1 class="page-title" id="page-title-main">Scholar Candidates</h1>
+        <p class="page-subtitle">Inspect, search, and manage registered scholarship students in the database.</p>
+    </div>
+    <a href="{{ url_for('add') }}" class="btn btn-primary" id="btn-add-applicant-top">
+        <i class="fa-solid fa-plus"></i> Add New Candidate
+    </a>
+</div>
+
+{% if db_error %}
+<div class="error-card" id="db-connection-error-card">
+    <div class="error-card-icon">
+        <i class="fa-solid fa-database-crack"></i>
+    </div>
+    <div class="error-card-body">
+        <h3>Database Connection Failed</h3>
+        <p>We encountered an error while trying to connect to the TiDB Database server. Please make sure that your credentials in the <code>.env</code> file are correct and the TiDB server is reachable.</p>
+        <div class="error-details">
+            <strong>Technical Details:</strong>
+            <code>{{ db_error }}</code>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Stats Cards Section -->
+<div class="stats-grid" id="stats-grid-dashboard">
+    <div class="stat-card" id="stat-card-total">
+        <div class="stat-card-info">
+            <span class="stat-label">Total Scholars</span>
+            <span class="stat-value">{{ stats.total }}</span>
+        </div>
+        <div class="stat-card-icon total">
+            <i class="fa-solid fa-users"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card" id="stat-card-gwa">
+        <div class="stat-card-info">
+            <span class="stat-label">Average GWA</span>
+            <span class="stat-value">{{ stats.avg_gwa }} <span class="gpa-scale">%</span></span>
+        </div>
+        <div class="stat-card-icon gpa">
+            <i class="fa-solid fa-award"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card" id="stat-card-approved">
+        <div class="stat-card-info">
+            <span class="stat-label">Merit Scholars</span>
+            <span class="stat-value text-approved">{{ stats.merit }}</span>
+        </div>
+        <div class="stat-card-icon approved">
+            <i class="fa-solid fa-star"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card" id="stat-card-pending">
+        <div class="stat-card-info">
+            <span class="stat-label">Working Students</span>
+            <span class="stat-value text-pending">{{ stats.working_pct }}<span class="gpa-scale">%</span></span>
+        </div>
+        <div class="stat-card-icon pending">
+            <i class="fa-solid fa-briefcase"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Table Card Container -->
+<div class="table-card" id="applicants-table-card">
+    <div class="table-card-header">
+        <h2 class="card-title" id="table-card-title"><i class="fa-solid fa-address-book"></i> Registered Scholar Dossiers</h2>
+        <span class="badge badge-info">{{ students|length }} Scholars Listed</span>
+    </div>
+    
+    <div class="table-responsive">
+        {% if students %}
+            <table class="data-table" id="applicants-data-table">
+                <thead>
+                    <tr>
+                        <th scope="col" id="col-header-id">Student ID</th>
+                        <th scope="col" id="col-header-candidate">Name</th>
+                        <th scope="col" id="col-header-academic">College & Program</th>
+                        <th scope="col" id="col-header-classification">Classification</th>
+                        <th scope="col" id="col-header-type">Type</th>
+                        <th scope="col" class="text-right" id="col-header-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                        <tr id="row-student-{{ student.Student_ID }}">
+                            <td>
+                                <span class="student-id-badge"><i class="fa-solid fa-id-card"></i> {{ student.Student_ID }}</span>
+                            </td>
+                            <td>
+                                <div class="candidate-cell">
+                                    <div class="avatar" style="background-color: var(--avatar-color-{{ (loop.index % 5) + 1 }});">
+                                        {{ student.Name[0] | upper if student.Name else 'S' }}
+                                    </div>
+                                    <div class="candidate-name">
+                                        <span class="full-name">{{ student.Name }}</span>
+                                        <span class="candidate-id">{{ student.Email_Address }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="academic-info">
+                                    <span class="college-text">{{ student.College_Enrolled }}</span>
+                                    <span class="program-text">{{ student.Program }} ({{ student.Year_and_Section }})</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="classification-tag class-{{ student.Scholar_Classification | lower }}">
+                                    {{ student.Scholar_Classification }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-pill status-{{ 'approved' if student.Scholarship_Type == 'Merit' else 'pending' }}">
+                                    <span class="status-dot"></span>
+                                    {{ student.Scholarship_Type }}
+                                </span>
+                            </td>
+                            <td class="text-right">
+                                <div class="actions-group">
+                                    <a href="{{ url_for('view', id=student.Student_ID) }}" class="action-btn view" title="View Detailed Dossier" id="btn-view-{{ student.Student_ID }}">
+                                        <i class="fa-solid fa-circle-info"></i> View Details
+                                    </a>
+                                    <a href="{{ url_for('edit', id=student.Student_ID) }}" class="action-btn edit" title="Edit Student Profile" id="btn-edit-{{ student.Student_ID }}">
+                                        <i class="fa-solid fa-pen-to-square"></i> Edit
+                                    </a>
+                                    <form action="{{ url_for('delete', id=student.Student_ID) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete scholar {{ student.Name }} (ID: {{ student.Student_ID }})? This will also delete their educational history and family records.');">
+                                        <button type="submit" class="action-btn delete" title="Delete Student Profile" id="btn-delete-{{ student.Student_ID }}">
+                                            <i class="fa-solid fa-trash-can"></i> Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <!-- Empty state when no applicants are in DB -->
+            <div class="empty-state" id="empty-state-section">
+                <div class="empty-state-icon">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+                <h3>No Scholar Records Found</h3>
+                <p>There are currently no candidates in the scholarship database. Add your first scholar profile to get started!</p>
+                <a href="{{ url_for('add') }}" class="btn btn-primary" id="btn-add-first-applicant">
+                    <i class="fa-solid fa-user-plus"></i> Add First Scholar
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

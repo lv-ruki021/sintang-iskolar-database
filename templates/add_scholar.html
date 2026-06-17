@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+
+{% block title %}Register Scholar | Sintang Iskolar Database{% endblock %}
+
+{% block content %}
+<div class="form-container-wrapper" id="add-scholar-container">
+    <div class="form-back-nav">
+        <a href="{{ url_for('index') }}" class="back-link" id="btn-back-dashboard">
+            <i class="fa-solid fa-arrow-left-long"></i> Back to Dashboard
+        </a>
+    </div>
+    
+    <div class="form-card" id="add-scholar-card">
+        <div class="form-card-header">
+            <div class="form-header-icon">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <div>
+                <h2>Scholar Registration Form</h2>
+                <p>Input candidate demographics, academic positioning, and financial criteria details.</p>
+            </div>
+        </div>
+        
+        <form action="{{ url_for('add') }}" method="POST" class="scholar-form" id="add-scholar-form">
+            
+            <!-- Section 1: Identity & Demographics -->
+            <div class="form-section-header">
+                <h3><i class="fa-solid fa-address-card"></i> 1. Personal & Contact Details</h3>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group col-6">
+                    <label for="Student_ID"><i class="fa-solid fa-id-card"></i> Student ID <span class="required-asterisk">*</span></label>
+                    <input type="text" id="Student_ID" name="Student_ID" placeholder="e.g. 2025-01234-MN-0" required maxlength="15"
+                           value="{{ form_data.Student_ID if form_data else '' }}">
+                    <small class="form-text">Unique 15-character identifier.</small>
+                </div>
+                <div class="form-group col-6">
+                    <label for="Name"><i class="fa-regular fa-user"></i> Full Name <span class="required-asterisk">*</span></label>
+                    <input type="text" id="Name" name="Name" placeholder="Enter Last Name, First Name Middle Name" required maxlength="100"
+                           value="{{ form_data.Name if form_data else '' }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-6">
+                    <label for="Email_Address"><i class="fa-regular fa-envelope"></i> Email Address <span class="required-asterisk">*</span></label>
+                    <input type="email" id="Email_Address" name="Email_Address" placeholder="student@domain.com" required maxlength="100"
+                           value="{{ form_data.Email_Address if form_data else '' }}">
+                </div>
+                <div class="form-group col-6">
+                    <label for="Mobile_Number"><i class="fa-solid fa-mobile-screen"></i> Mobile Number</label>
+                    <input type="text" id="Mobile_Number" name="Mobile_Number" placeholder="e.g. 09171234567" maxlength="15"
+                           value="{{ form_data.Mobile_Number if form_data else '' }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-6">
+                    <label for="Landline"><i class="fa-solid fa-phone"></i> Landline</label>
+                    <input type="text" id="Landline" name="Landline" placeholder="Landline number" maxlength="15"
+                           value="{{ form_data.Landline if form_data else '' }}">
+                </div>
+                <div class="form-group col-6">
+                    <label for="Date_of_Birth"><i class="fa-solid fa-cake-candles"></i> Date of Birth <span class="required-asterisk">*</span></label>
+                    <input type="date" id="Date_of_Birth" name="Date_of_Birth" required
+                           value="{{ form_data.Date_of_Birth if form_data else '' }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-6">
+                    <label for="Age"><i class="fa-solid fa-calendar-day"></i> Age</label>
+                    <input type="number" id="Age" name="Age" placeholder="Age" min="16" max="99"
+                           value="{{ form_data.Age if form_data else '' }}">
+                </div>
+                <div class="form-group col-6">
+                    <label for="Civil_Status"><i class="fa-solid fa-heart"></i> Civil Status <span class="required-asterisk">*</span></label>
+                    <select id="Civil_Status" name="Civil_Status" required>
+                        <option value="">Select Status</option>
+                        <option value="Single" {% if form_data and form_data.Civil_Status == 'Single' %}selected{% endif %}>Single</option>
+                        <option value="Married" {% if form_data and form_data.Civil_Status == 'Married' %}selected{% endif %}>Married</option>
+                        <option value="Widowed" {% if form_data and form_data.Civil_Status == 'Widowed' %}selected{% endif %}>Widowed</option>
+                        <option value="Divorced" {% if form_data and form_data.Civil_Status == 'Divorced' %}selected{% endif %}>Divorced</option>
+                        <option value="Separated" {% if form_data and form_data.Civil_Status == 'Separated' %}selected{% endif %}>Separated</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-6">
+                    <label for="Citizenship"><i class="fa-solid fa-flag"></i> Citizenship <span class="required-asterisk">*</span></label>
+                    <input type="text" id="Citizenship" name="Citizenship" placeholder="e.g. Filipino" required maxlength="50"
+                           value="{{ form_data.Citizenship if form_data else '' }}">
+                </div>
+                <div class="form-group col-6">
+                    <label for="Religion"><i class="fa-solid fa-dharmachakra"></i> Religion</label>
+                    <input type="text" id="Religion" name="Religion" placeholder="Religion" maxlength="50"
+                           value="{{ form_data.Religion if form_data else '' }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="Address"><i class="fa-solid fa-house-chimney"></i> Home Address <span class="required-asterisk">*</span></label>
+                <input type="text" id="Address" name="Address" placeholder="Complete Street, Barangay, City, Province" required maxlength="255"
+                       value="{{ form_data.Address if form_data else '' }}">
+            </div>
+            
+            <!-- Section 2: Academics -->
+            <div class="form-section-header">
+                <h3><i class="fa-solid fa-graduation-cap"></i> 2. Academic Information</h3>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-6">
+                    <label for="Scholarship_Type"><i class="fa-solid fa-award"></i> Scholarship Type <span class="required-asterisk">*</span></label>
+                    <select id="Scholarship_Type" name="Scholarship_Type" required onchange="toggleScholarshipRules(this.value)">
+                        <option value="">Select Type</option>
+                        <option value="Merit" {% if form_data and form_data.Scholarship_Type == 'Merit' %}selected{% endif %}>Merit Scholar</option>
+                        <option value="Financial Aid" {% if form_data and form_data.Scholarship_Type == 'Financial Aid' %}selected{% endif %}>Financial Aid</option>
+                    </select>
+                </div>
+                <div class="form-group col-6">
+                    <label for="Scholar_Classification"><i class="fa-solid fa-user-graduate"></i> Scholar Classification <span class="required-asterisk">*</span></label>
+                    <select id="Scholar_Classification" name="Scholar_Classification" required onchange="toggleClassificationFields(this.value)">
+                        <option value="">Select Classification</option>
+                        <option value="Freshmen" {% if form_data and form_data.Scholar_Classification == 'Freshmen' %}selected{% endif %}>Freshmen</option>
+                        <option value="Upperclassman" {% if form_data and form_data.Scholar_Classification == 'Upperclassman' %}selected{% endif %}>Upperclassman</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-6" id="sub-class-group" style="display:none;">
+                    <label for="Scholar_Sub_Classification"><i class="fa-solid fa-sliders"></i> Scholar Sub-Classification <span class="required-asterisk">*</span></label>
+                    <select id="Scholar_Sub_Classification" name="Scholar_Sub_Classification">
+                        <option value="">Select Option</option>
+                        <option value="Existing Scholar" {% if form_data and form_data.Scholar_Sub_Classification == 'Existing Scholar' %}selected{% endif %}>Existing Scholar (Renewal)</option>
+                        <option value="Prospective Scholar" {% if form_data and form_data.Scholar_Sub_Classification == 'Prospective Scholar' %}selected{% endif %}>Prospective Scholar (First-time)</option>
+                    </select>
+                </div>
+                <div class="form-group col-6 checkbox-container">
+                    <label class="custom-checkbox-label">
+                        <input type="checkbox" name="Is_Regular" value="1" required checked>
+                        <span>Confirm Regular Student Status *</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-6">
+                    <label for="College_Enrolled"><i class="fa-solid fa-school"></i> College Enrolled <span class="required-asterisk">*</span></label>
+                    <input type="text" id="College_Enrolled" name="College_Enrolled" placeholder="e.g. College of Science" required maxlength="150"
+                           value="{{ form_data.College_Enrolled if form_data else '' }}">
+                </div>
+                <div class="form-group col-6">
+                    <label for="Program"><i class="fa-solid fa-book-bookmark"></i> Academic Program <span class="required-asterisk">*</span></label>
+                    <input type="text" id="Program" name="Program" placeholder="e.g. BS Computer Science" required maxlength="100"
+                           value="{{ form_data.Program if form_data else '' }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="Year_and_Section"><i class="fa-solid fa-chalkboard-user"></i> Year and Section <span class="required-asterisk">*</span></label>
+                <input type="text" id="Year_and_Section" name="Year_and_Section" placeholder="e.g. 2-3" required maxlength="20"
+                       value="{{ form_data.Year_and_Section if form_data else '' }}">
+            </div>
+
+            <!-- Section 3: Financial Background -->
+            <div class="form-section-header">
+                <h3><i class="fa-solid fa-receipt"></i> 3. Socio-Economic Profile</h3>
+            </div>
+
+            <div class="form-row checkbox-row">
+                <div class="form-group col-6 checkbox-container">
+                    <label class="custom-checkbox-label">
+                        <input type="checkbox" name="Working_Student" value="1" {% if form_data and form_data.Working_Student == '1' %}checked{% endif %} onchange="toggleJobField(this.checked)">
+                        <span>Is Working Student?</span>
+                    </label>
+                </div>
+                <div class="form-group col-6">
+                    <label for="Vehicles_Owned_Count"><i class="fa-solid fa-car"></i> Vehicles Owned by Household</label>
+                    <input type="number" id="Vehicles_Owned_Count" name="Vehicles_Owned_Count" placeholder="0" min="0" max="10"
+                           value="{{ form_data.Vehicles_Owned_Count if form_data else '0' }}">
+                    <small class="form-text" id="vehicle-rule-text">Vehicles ownership limit is 1 to qualify for Financial Aid.</small>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-6" id="job-title-group" style="display:none;">
+                    <label for="Job_Title"><i class="fa-solid fa-briefcase"></i> Job Title</label>
+                    <input type="text" id="Job_Title" name="Job_Title" placeholder="Specify job role" maxlength="100"
+                           value="{{ form_data.Job_Title if form_data else '' }}">
+                </div>
+                <div class="form-group col-6">
+                    <label for="Other_Scholarship"><i class="fa-solid fa-hand-holding-dollar"></i> Other Scholarships</label>
+                    <input type="text" id="Other_Scholarship" name="Other_Scholarship" placeholder="Specify other aids" maxlength="250"
+                           value="{{ form_data.Other_Scholarship if form_data else '' }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-6">
+                    <label for="House_Ownership"><i class="fa-solid fa-house-laptop"></i> House Ownership</label>
+                    <input type="text" id="House_Ownership" name="House_Ownership" placeholder="e.g. Owned, Rented" maxlength="50"
+                           value="{{ form_data.House_Ownership if form_data else '' }}">
+                </div>
+                <div class="form-group col-6">
+                    <label for="Total_Annual_Household_Income"><i class="fa-solid fa-money-bill-wave"></i> Total Annual Income</label>
+                    <input type="number" id="Total_Annual_Household_Income" name="Total_Annual_Household_Income" placeholder="0.00 to 1,000,000.00" step="0.01" min="0" max="1000000"
+                           value="{{ form_data.Total_Annual_Household_Income if form_data else '' }}">
+                    <small class="form-text" id="income-rule-text">Must not exceed ₱200,000 to qualify for Financial Aid.</small>
+                </div>
+            </div>
+
+            <!-- Section 4: Attachments & Documents -->
+            <div class="form-section-header">
+                <h3><i class="fa-solid fa-paperclip"></i> 4. Required Attachments & Academic Files</h3>
+            </div>
+
+            <div class="form-group">
+                <label for="Proof_of_Income"><i class="fa-solid fa-file-invoice-dollar"></i> Proof of Income <span class="required-asterisk">*</span></label>
+                <input type="text" id="Proof_of_Income" name="Proof_of_Income" placeholder="e.g. ITR_Student_Parent.pdf" required maxlength="100"
+                       value="{{ form_data.Proof_of_Income if form_data else '' }}">
+                <small class="form-text">Document name validating annual household income statements.</small>
+            </div>
+
+            <!-- Conditional Section: Freshmen Fields -->
+            <div id="freshmen-fields" class="conditional-fields-box" style="display:none;">
+                <h4 class="conditional-box-title"><i class="fa-solid fa-circle-arrow-right"></i> Freshmen Academic Requirements</h4>
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label for="Grade_11_GWA">Grade 11 GWA <span class="required-asterisk">*</span></label>
+                        <input type="number" id="Grade_11_GWA" name="Grade_11_GWA" placeholder="e.g. 92.50" step="0.01" min="0" max="100"
+                               value="{{ form_data.Grade_11_GWA if form_data else '' }}">
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="Grade_12_GWA">Grade 12 GWA (General Average) <span class="required-asterisk">*</span></label>
+                        <input type="number" id="Grade_12_GWA" name="Grade_12_GWA" placeholder="e.g. 93.80" step="0.01" min="0" max="100"
+                               value="{{ form_data.Grade_12_GWA if form_data else '' }}">
+                        <small class="form-text" id="fresh-gwa-rule">Must be G90% for Merit.</small>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label for="Fresh_Lowest_Grade">Lowest Subject Grade received</label>
+                        <input type="number" id="Fresh_Lowest_Grade" name="Lowest_Subject_Grade" placeholder="Lowest grade" step="0.01" min="0" max="100"
+                               value="{{ form_data.Lowest_Subject_Grade if form_data and form_data.Lowest_Subject_Grade else '' }}">
+                        <small class="form-text" id="fresh-grade-rule">Must be G85% for Merit.</small>
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="FORM137">FORM 137 Document Name <span class="required-asterisk">*</span></label>
+                        <input type="text" id="FORM137" name="FORM137" placeholder="e.g. Form137_LanceValerio.pdf" maxlength="100"
+                               value="{{ form_data.FORM137 if form_data else '' }}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conditional Section: Upperclassman Fields -->
+            <div id="upperclassman-fields" class="conditional-fields-box" style="display:none;">
+                <h4 class="conditional-box-title"><i class="fa-solid fa-circle-arrow-right"></i> Upperclassman Academic Requirements</h4>
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label for="College_GWA">College GWA (General Average) <span class="required-asterisk">*</span></label>
+                        <input type="number" id="College_GWA" name="College_GWA" placeholder="1.00 to 5.00" step="0.01" min="1.00" max="5.00"
+                               value="{{ form_data.College_GWA if form_data else '' }}">
+                        <small class="form-text" id="upper-gwa-rule">Must be <= 2.0 for Merit.</small>
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="Upper_Lowest_Grade">Lowest Subject Grade received <span class="required-asterisk">*</span></label>
+                        <input type="number" id="Upper_Lowest_Grade" name="Lowest_Subject_Grade" placeholder="1.00 to 5.00" step="0.01" min="1.00" max="5.00">
+                        <small class="form-text" id="upper-grade-rule">Must be <= 2.0 for Merit.</small>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label for="COR">COR Document Name <span class="required-asterisk">*</span></label>
+                        <input type="text" id="COR" name="COR" placeholder="e.g. COR_2026_LanceValerio.pdf" maxlength="100"
+                               value="{{ form_data.COR if form_data else '' }}">
+                        <small class="form-text">Certificate of Registration</small>
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="CTC">CTC Document Name <span class="required-asterisk">*</span></label>
+                        <input type="text" id="CTC" name="CTC" placeholder="e.g. CTC_Grades_LanceValerio.pdf" maxlength="100"
+                               value="{{ form_data.CTC if form_data else '' }}">
+                        <small class="form-text">Certified True Copy of Grades</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions-bar">
+                <a href="{{ url_for('index') }}" class="btn btn-secondary" id="btn-add-cancel">Cancel</a>
+                <button type="submit" class="btn btn-primary" id="btn-add-submit">
+                    <i class="fa-solid fa-circle-check"></i> Register Candidate
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleClassificationFields(val) {
+        const freshBox = document.getElementById('freshmen-fields');
+        const upperBox = document.getElementById('upperclassman-fields');
+        const subGroup = document.getElementById('sub-class-group');
+        
+        const g11 = document.getElementById('Grade_11_GWA');
+        const g12 = document.getElementById('Grade_12_GWA');
+        const freshLowest = document.getElementById('Fresh_Lowest_Grade');
+        const f137 = document.getElementById('FORM137');
+        
+        const collegeGwa = document.getElementById('College_GWA');
+        const upperLowest = document.getElementById('Upper_Lowest_Grade');
+        const cor = document.getElementById('COR');
+        const ctc = document.getElementById('CTC');
+        const subClass = document.getElementById('Scholar_Sub_Classification');
+        
+        if (val === 'Freshmen') {
+            freshBox.style.display = 'block';
+            upperBox.style.display = 'none';
+            subGroup.style.display = 'none';
+            
+            // Set required fields
+            g11.required = true;
+            g12.required = true;
+            f137.required = true;
+            freshLowest.required = true;
+            freshLowest.name = "Lowest_Subject_Grade";
+            
+            // Remove required fields
+            cor.required = false;
+            ctc.required = false;
+            subClass.required = false;
+            upperLowest.required = false;
+            upperLowest.name = ""; // Prevent submission conflict
+        } else if (val === 'Upperclassman') {
+            freshBox.style.display = 'none';
+            upperBox.style.display = 'block';
+            subGroup.style.display = 'block';
+            
+            // Set required fields
+            cor.required = true;
+            ctc.required = true;
+            subClass.required = true;
+            collegeGwa.required = true;
+            upperLowest.required = true;
+            upperLowest.name = "Lowest_Subject_Grade";
+            
+            // Remove required/name fields
+            g11.required = false;
+            g12.required = false;
+            f137.required = false;
+            freshLowest.required = false;
+            freshLowest.name = "";
+        } else {
+            freshBox.style.display = 'none';
+            upperBox.style.display = 'none';
+            subGroup.style.display = 'none';
+            
+            g11.required = false;
+            g12.required = false;
+            f137.required = false;
+            cor.required = false;
+            ctc.required = false;
+            subClass.required = false;
+            collegeGwa.required = false;
+            upperLowest.required = false;
+            freshLowest.required = false;
+        }
+    }
+
+    function toggleJobField(isChecked) {
+        const jobGroup = document.getElementById('job-title-group');
+        jobGroup.style.display = isChecked ? 'block' : 'none';
+    }
+
+    function toggleScholarshipRules(type) {
+        const incomeText = document.getElementById('income-rule-text');
+        const vehicleText = document.getElementById('vehicle-rule-text');
+        
+        const freshGwa = document.getElementById('fresh-gwa-rule');
+        const freshGrade = document.getElementById('fresh-grade-rule');
+        const upperGwa = document.getElementById('upper-gwa-rule');
+        const upperGrade = document.getElementById('upper-grade-rule');
+        
+        if (type === 'Financial Aid') {
+            incomeText.style.color = '#ef4444';
+            vehicleText.style.color = '#ef4444';
+            
+            freshGwa.style.color = '';
+            freshGrade.style.color = '';
+            upperGwa.style.color = '';
+            upperGrade.style.color = '';
+        } else if (type === 'Merit') {
+            incomeText.style.color = '';
+            vehicleText.style.color = '';
+            
+            freshGwa.style.color = '#ef4444';
+            freshGrade.style.color = '#ef4444';
+            upperGwa.style.color = '#ef4444';
+            upperGrade.style.color = '#ef4444';
+        } else {
+            incomeText.style.color = '';
+            vehicleText.style.color = '';
+            freshGwa.style.color = '';
+            freshGrade.style.color = '';
+            upperGwa.style.color = '';
+            upperGrade.style.color = '';
+        }
+    }
+
+    // Run on page load
+    document.addEventListener("DOMContentLoaded", function() {
+        const classification = document.getElementById('Scholar_Classification').value;
+        toggleClassificationFields(classification);
+        
+        const workingStudent = document.querySelector('input[name="Working_Student"]').checked;
+        toggleJobField(workingStudent);
+        
+        const type = document.getElementById('Scholarship_Type').value;
+        toggleScholarshipRules(type);
+    });
+</script>
+{% endblock %}

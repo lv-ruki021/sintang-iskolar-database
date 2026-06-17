@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Scholarship Database application to manage and review scholar applicants. Built with Flask, TiDB, and custom modern CSS.">
+    <meta name="author" content="Antigravity Web Builder">
+    <title>{% block title %}Sintang Iskolar Database{% endblock %}</title>
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Premium Header and Navigation Bar -->
+    <header class="app-header" id="app-header">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="brand-logo" id="nav-brand-logo">
+                <i class="fa-solid fa-star"></i>
+                <span>Sintang<span>Iskolar</span></span>
+            </a>
+            <nav class="nav-links" id="nav-links">
+                <a href="{{ url_for('index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}" id="nav-link-home">
+                    <i class="fa-solid fa-chart-line"></i> Dashboard
+                </a>
+                <a href="{{ url_for('add') }}" class="nav-btn" id="nav-link-add">
+                    <i class="fa-solid fa-user-plus"></i> Add Applicant
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="main-content-area">
+        <div class="container">
+            <!-- Flask Flash Messaging System -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages" id="flash-messages-container">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}" role="alert" id="alert-{{ loop.index }}">
+                                <span class="alert-icon">
+                                    {% if category == 'success' %}
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    {% elif category == 'danger' %}
+                                        <i class="fa-solid fa-circle-xmark"></i>
+                                    {% elif category == 'warning' %}
+                                        <i class="fa-solid fa-triangle-exclamation"></i>
+                                    {% else %}
+                                        <i class="fa-solid fa-circle-info"></i>
+                                    {% endif %}
+                                </span>
+                                <span class="alert-message">{{ message }}</span>
+                                <button type="button" class="alert-close" onclick="this.parentElement.style.display='none';">&times;</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer" id="app-footer">
+        <div class="container footer-content">
+            <p>&copy; 2026 Sintang Iskolar. All rights reserved. Powered by TiDB Cloud & Flask.</p>
+        </div>
+    </footer>
+</body>
+</html>
