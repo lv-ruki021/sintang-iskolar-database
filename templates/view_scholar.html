@@ -25,6 +25,11 @@
             <a href="{{ url_for('home') }}" class="back-link" id="btn-back-dashboard">
                 <i class="fa-solid fa-arrow-left-long"></i> Back to Home
             </a>
+            <div class="dossier-actions">
+                <a href="{{ url_for('admin_edit', id=student.Student_ID) }}" class="btn btn-secondary" id="btn-dossier-edit">
+                    <i class="fa-solid fa-user-pen"></i> Edit Profile
+                </a>
+            </div>
         {% endif %}
     </div>
     

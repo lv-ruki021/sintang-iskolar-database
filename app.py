@@ -25,7 +25,7 @@ def admin_required(f):
 def user_or_admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        student_id = kwargs.get('student_id')
+        student_id = kwargs.get('student_id') or kwargs.get('id')
         is_admin = session.get('is_admin')
         is_authorized_applicant = session.get('applicant_id') == student_id
         if not (is_admin or is_authorized_applicant):
@@ -483,7 +483,7 @@ def apply():
     return render_template('add_scholar.html')
 
 @app.route('/admin/edit/<string:id>', methods=['GET', 'POST'])
-@admin_required
+@user_or_admin_required
 def admin_edit(id):
     """
     Edit view for an existing scholar student, parsing custom columns.
@@ -673,7 +673,9 @@ def admin_edit(id):
             conn.commit()
             
             flash(f"Scholar `{name}` (ID: {id}) successfully updated!", "success")
-            return redirect(url_for('index'))
+            if session.get('is_admin'):
+                return redirect(url_for('index'))
+            return redirect(url_for('applicant_view', student_id=id))
             
         except pymysql.Error as err:
             errno = err.args[0] if len(err.args) > 0 else None
