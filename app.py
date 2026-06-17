@@ -634,7 +634,7 @@ def admin_edit(id):
         elif scholar_classification == 'Upperclassman':
             if not cor or not ctc:
                 errors.append("For Upperclassman, COR and CTC are required.")
-            grade_11_gwa, grade_12_gwa, form137 = None, None, None
+            form137 = None
 
         if errors:
             for err in errors:

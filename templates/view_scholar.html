@@ -118,14 +118,14 @@
                         <table class="details-list-table">
                             <tr><th>Proof of Income:</th><td><span class="file-badge"><i class="fa-regular fa-file-lines"></i> {{ student.Proof_of_Income }}</span></td></tr>
                             {% if student.Scholar_Classification == 'Freshmen' %}
-                                <tr><th>Grade 11 GWA:</th><td><strong class="text-gwa">{{ student.Grade_11_GWA }}%</strong></td></tr>
-                                <tr><th>Grade 12 GWA:</th><td><strong class="text-gwa">{{ student.Grade_12_GWA }}%</strong></td></tr>
-                                <tr><th>FORM 137:</th><td><span class="file-badge"><i class="fa-regular fa-file-pdf"></i> {{ student.FORM137 }}</span></td></tr>
+                                <tr><th>Grade 11 GWA:</th><td><strong class="text-gwa">{{ student.Grade_11_GWA if student.Grade_11_GWA is not none else 'Not specified' }}{{ '%' if student.Grade_11_GWA is not none else '' }}</strong></td></tr>
+                                <tr><th>Grade 12 GWA:</th><td><strong class="text-gwa">{{ student.Grade_12_GWA if student.Grade_12_GWA is not none else 'Not specified' }}{{ '%' if student.Grade_12_GWA is not none else '' }}</strong></td></tr>
+                                <tr><th>FORM 137:</th><td><span class="file-badge"><i class="fa-regular fa-file-pdf"></i> {{ student.FORM137 if student.FORM137 else 'Not specified' }}</span></td></tr>
                             {% elif student.Scholar_Classification == 'Upperclassman' %}
-                                <tr><th>College GWA:</th><td><strong class="text-gwa">{{ student.College_GWA }}</strong></td></tr>
-                                <tr><th>Lowest Subject Grade:</th><td><strong class="text-gwa">{{ student.Lowest_Subject_Grade }}</strong></td></tr>
-                                <tr><th>COR File Name:</th><td><span class="file-badge"><i class="fa-regular fa-file-pdf"></i> {{ student.COR }}</span></td></tr>
-                                <tr><th>CTC File Name:</th><td><span class="file-badge"><i class="fa-regular fa-file-pdf"></i> {{ student.CTC }}</span></td></tr>
+                                <tr><th>College GWA:</th><td><strong class="text-gwa">{{ student.College_GWA if student.College_GWA is not none else 'Not specified' }}</strong></td></tr>
+                                <tr><th>Lowest Subject Grade:</th><td><strong class="text-gwa">{{ student.Lowest_Subject_Grade if student.Lowest_Subject_Grade is not none else 'Not specified' }}</strong></td></tr>
+                                <tr><th>COR File Name:</th><td><span class="file-badge"><i class="fa-regular fa-file-pdf"></i> {{ student.COR if student.COR else 'Not specified' }}</span></td></tr>
+                                <tr><th>CTC File Name:</th><td><span class="file-badge"><i class="fa-regular fa-file-pdf"></i> {{ student.CTC if student.CTC else 'Not specified' }}</span></td></tr>
                             {% endif %}
                         </table>
                     </div>
