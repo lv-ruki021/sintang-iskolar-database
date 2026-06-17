@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome | Sintang Iskolar Database{% endblock %}
+
+{% block content %}
+<div class="home-hero">
+    <h1>Sintang <span>Iskolar</span> Application Portal</h1>
+    <p>Welcome to the official scholarship management platform. Sintang Iskolar provides applicants with a seamless registration process, and coordinators with a robust database dashboard for tracking, verification, and profile management.</p>
+</div>
+
+<div class="home-cards-grid">
+    <!-- Card 1: Apply Now -->
+    <div class="home-card" id="card-apply">
+        <div class="home-card-icon">
+            <i class="fa-solid fa-file-signature"></i>
+        </div>
+        <h2>Apply Now</h2>
+        <p>New candidate registration form. Input your demographics, academic profile, and family socio-economic status to apply for Merit or Financial Aid scholarships.</p>
+        <a href="{{ url_for('apply') }}" class="btn-action btn-primary" id="btn-home-apply">
+            Start Application <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+
+    <!-- Card 2: Track Application -->
+    <div class="home-card" id="card-track">
+        <div class="home-card-icon">
+            <i class="fa-solid fa-magnifying-glass-chart"></i>
+        </div>
+        <h2>Track Application</h2>
+        <p>Log in with your Student ID and Email Address to review your profile status, and add, update, or remove family members, school records, or extracurricular details.</p>
+        <a href="{{ url_for('applicant_login') }}" class="btn-action btn-outline" id="btn-home-track">
+            Manage Dossier <i class="fa-solid fa-user-gear"></i>
+        </a>
+    </div>
+
+    <!-- Card 3: Admin Portal -->
+    <div class="home-card" id="card-admin">
+        <div class="home-card-icon">
+            <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <h2>Admin Portal</h2>
+        <p>Secure coordinator dashboard access. View consolidated statistics, filter applicants, update records, and verify scholarship criteria compliance.</p>
+        <a href="{{ url_for('admin_login') }}" class="btn-action btn-outline" id="btn-home-admin">
+            Admin Login <i class="fa-solid fa-lock"></i>
+        </a>
+    </div>
+</div>
+{% endblock %}

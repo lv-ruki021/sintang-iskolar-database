@@ -5,8 +5,8 @@
 {% block content %}
 <div class="form-container-wrapper" id="edit-scholar-container">
     <div class="form-back-nav">
-        <a href="{{ url_for('index') }}" class="back-link" id="btn-back-dashboard-edit">
-            <i class="fa-solid fa-arrow-left-long"></i> Back to Dashboard
+        <a href="{{ url_for('admin_view', id=student.Student_ID) }}" class="back-link" id="btn-back-dashboard-edit">
+            <i class="fa-solid fa-arrow-left-long"></i> Back to Dossier
         </a>
     </div>
     
@@ -21,7 +21,7 @@
             </div>
         </div>
         
-        <form action="{{ url_for('edit', id=student.Student_ID) }}" method="POST" class="scholar-form" id="edit-scholar-form">
+        <form action="{{ url_for('admin_edit', id=student.Student_ID) }}" method="POST" class="scholar-form" id="edit-scholar-form">
             
             <!-- Section 1: Identity & Demographics -->
             <div class="form-section-header">

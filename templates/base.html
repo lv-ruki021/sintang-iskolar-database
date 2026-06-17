@@ -19,17 +19,52 @@
     <!-- Premium Header and Navigation Bar -->
     <header class="app-header" id="app-header">
         <div class="nav-container">
-            <a href="{{ url_for('index') }}" class="brand-logo" id="nav-brand-logo">
-                <i class="fa-solid fa-star"></i>
-                <span>Sintang<span>Iskolar</span></span>
-            </a>
+            {% if session.get('is_admin') %}
+                <a href="{{ url_for('index') }}" class="brand-logo" id="nav-brand-logo">
+                    <i class="fa-solid fa-star"></i>
+                    <span>Sintang<span>Iskolar</span></span>
+                </a>
+            {% elif session.get('applicant_id') %}
+                <a href="{{ url_for('applicant_view', student_id=session.get('applicant_id')) }}" class="brand-logo" id="nav-brand-logo">
+                    <i class="fa-solid fa-star"></i>
+                    <span>Sintang<span>Iskolar</span></span>
+                </a>
+            {% else %}
+                <a href="{{ url_for('home') }}" class="brand-logo" id="nav-brand-logo">
+                    <i class="fa-solid fa-star"></i>
+                    <span>Sintang<span>Iskolar</span></span>
+                </a>
+            {% endif %}
+            
             <nav class="nav-links" id="nav-links">
-                <a href="{{ url_for('index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}" id="nav-link-home">
-                    <i class="fa-solid fa-chart-line"></i> Dashboard
-                </a>
-                <a href="{{ url_for('add') }}" class="nav-btn" id="nav-link-add">
-                    <i class="fa-solid fa-user-plus"></i> Add Applicant
-                </a>
+                {% if session.get('is_admin') %}
+                    <a href="{{ url_for('index') }}" class="nav-link {% if request.path == '/admin' %}active{% endif %}" id="nav-link-dashboard">
+                        <i class="fa-solid fa-chart-line"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('admin_logout') }}" class="nav-link" id="nav-link-admin-logout">
+                        <i class="fa-solid fa-right-from-bracket"></i> Logout
+                    </a>
+                {% elif session.get('applicant_id') %}
+                    <a href="{{ url_for('applicant_view', student_id=session.get('applicant_id')) }}" class="nav-link {% if '/applicant/view/' in request.path %}active{% endif %}" id="nav-link-my-app">
+                        <i class="fa-solid fa-id-card-clip"></i> My Application
+                    </a>
+                    <a href="{{ url_for('applicant_logout') }}" class="nav-link" id="nav-link-app-logout">
+                        <i class="fa-solid fa-right-from-bracket"></i> Logout
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('home') }}" class="nav-link {% if request.path == '/' %}active{% endif %}" id="nav-link-home">
+                        <i class="fa-solid fa-house"></i> Home
+                    </a>
+                    <a href="{{ url_for('applicant_login') }}" class="nav-link {% if request.path == '/applicant/login' %}active{% endif %}" id="nav-link-track">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i> Track Application
+                    </a>
+                    <a href="{{ url_for('admin_login') }}" class="nav-link {% if request.path == '/admin/login' %}active{% endif %}" id="nav-link-admin-portal">
+                        <i class="fa-solid fa-lock"></i> Admin Portal
+                    </a>
+                    <a href="{{ url_for('apply') }}" class="nav-btn" id="nav-link-apply">
+                        <i class="fa-solid fa-user-plus"></i> Apply Now
+                    </a>
+                {% endif %}
             </nav>
         </div>
     </header>

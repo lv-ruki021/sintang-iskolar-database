@@ -7,19 +7,25 @@
     
     <!-- Navigation & Main Action Controls -->
     <div class="dossier-nav-bar">
-        <a href="{{ url_for('index') }}" class="back-link" id="btn-back-dashboard">
-            <i class="fa-solid fa-arrow-left-long"></i> Back to Dashboard
-        </a>
-        <div class="dossier-actions">
-            <a href="{{ url_for('edit', id=student.Student_ID) }}" class="btn btn-secondary" id="btn-dossier-edit">
-                <i class="fa-solid fa-user-pen"></i> Edit Profile
+        {% if session.get('is_admin') %}
+            <a href="{{ url_for('index') }}" class="back-link" id="btn-back-dashboard">
+                <i class="fa-solid fa-arrow-left-long"></i> Back to Dashboard
             </a>
-            <form action="{{ url_for('delete', id=student.Student_ID) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this applicant profile? This action will permanently remove all family, school, and extracurricular history.');">
-                <button type="submit" class="btn btn-danger-action" id="btn-dossier-delete">
-                    <i class="fa-solid fa-trash-can"></i> Delete Profile
-                </button>
-            </form>
-        </div>
+            <div class="dossier-actions">
+                <a href="{{ url_for('admin_edit', id=student.Student_ID) }}" class="btn btn-secondary" id="btn-dossier-edit">
+                    <i class="fa-solid fa-user-pen"></i> Edit Profile
+                </a>
+                <form action="{{ url_for('admin_delete', id=student.Student_ID) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this applicant profile? This action will permanently remove all family, school, and extracurricular history.');">
+                    <button type="submit" class="btn btn-danger-action" id="btn-dossier-delete">
+                        <i class="fa-solid fa-trash-can"></i> Delete Profile
+                    </button>
+                </form>
+            </div>
+        {% else %}
+            <a href="{{ url_for('home') }}" class="back-link" id="btn-back-dashboard">
+                <i class="fa-solid fa-arrow-left-long"></i> Back to Home
+            </a>
+        {% endif %}
     </div>
     
     <!-- Header Summary Card -->

@@ -8,7 +8,7 @@
         <h1 class="page-title" id="page-title-main">Scholar Candidates</h1>
         <p class="page-subtitle">Inspect, search, and manage registered scholarship students in the database.</p>
     </div>
-    <a href="{{ url_for('add') }}" class="btn btn-primary" id="btn-add-applicant-top">
+    <a href="{{ url_for('apply') }}" class="btn btn-primary" id="btn-add-applicant-top">
         <i class="fa-solid fa-plus"></i> Add New Candidate
     </a>
 </div>
@@ -128,13 +128,13 @@
                             </td>
                             <td class="text-right">
                                 <div class="actions-group">
-                                    <a href="{{ url_for('view', id=student.Student_ID) }}" class="action-btn view" title="View Detailed Dossier" id="btn-view-{{ student.Student_ID }}">
+                                    <a href="{{ url_for('admin_view', id=student.Student_ID) }}" class="action-btn view" title="View Detailed Dossier" id="btn-view-{{ student.Student_ID }}">
                                         <i class="fa-solid fa-circle-info"></i> View Details
                                     </a>
-                                    <a href="{{ url_for('edit', id=student.Student_ID) }}" class="action-btn edit" title="Edit Student Profile" id="btn-edit-{{ student.Student_ID }}">
+                                    <a href="{{ url_for('admin_edit', id=student.Student_ID) }}" class="action-btn edit" title="Edit Student Profile" id="btn-edit-{{ student.Student_ID }}">
                                         <i class="fa-solid fa-pen-to-square"></i> Edit
                                     </a>
-                                    <form action="{{ url_for('delete', id=student.Student_ID) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete scholar {{ student.Name }} (ID: {{ student.Student_ID }})? This will also delete their educational history and family records.');">
+                                    <form action="{{ url_for('admin_delete', id=student.Student_ID) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete scholar {{ student.Name }} (ID: {{ student.Student_ID }})? This will also delete their educational history and family records.');">
                                         <button type="submit" class="action-btn delete" title="Delete Student Profile" id="btn-delete-{{ student.Student_ID }}">
                                             <i class="fa-solid fa-trash-can"></i> Delete
                                         </button>
@@ -153,7 +153,7 @@
                 </div>
                 <h3>No Scholar Records Found</h3>
                 <p>There are currently no candidates in the scholarship database. Add your first scholar profile to get started!</p>
-                <a href="{{ url_for('add') }}" class="btn btn-primary" id="btn-add-first-applicant">
+                <a href="{{ url_for('apply') }}" class="btn btn-primary" id="btn-add-first-applicant">
                     <i class="fa-solid fa-user-plus"></i> Add First Scholar
                 </a>
             </div>

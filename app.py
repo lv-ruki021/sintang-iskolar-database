@@ -1,8 +1,162 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash
+from functools import wraps
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 import mysql.connector
 from dotenv import load_dotenv
 from datetime import datetime
+
+# Decorators for auth
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('is_admin'):
+            flash("Please log in as an administrator to access this page.", "warning")
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def user_or_admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        student_id = kwargs.get('student_id')
+        is_admin = session.get('is_admin')
+        is_authorized_applicant = session.get('applicant_id') == student_id
+        if not (is_admin or is_authorized_applicant):
+            flash("Access denied. You are not authorized to access or modify this application.", "danger")
+            return redirect(url_for('home'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def redirect_to_dossier(student_id):
+    if session.get('is_admin'):
+        return redirect(url_for('admin_view', id=student_id))
+    return redirect(url_for('applicant_view', student_id=student_id))
+
+@app.route('/')
+def home():
+    """
+    Renders the public landing page.
+    """
+    return render_template('home.html')
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if session.get('is_admin'):
+        return redirect(url_for('index'))
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        if username == 'admin1' and password == 'sintangiskolar':
+            session['is_admin'] = True
+            session.pop('applicant_id', None)
+            flash("Admin login successful. Welcome to the Sintang Iskolar coordinator dashboard!", "success")
+            return redirect(url_for('index'))
+        else:
+            flash("Invalid admin username or password.", "danger")
+    return render_template('admin_login.html')
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('is_admin', None)
+    flash("You have been logged out of the admin panel.", "info")
+    return redirect(url_for('home'))
+
+@app.route('/applicant/login', methods=['GET', 'POST'])
+def applicant_login():
+    if session.get('applicant_id'):
+        return redirect(url_for('applicant_view', student_id=session.get('applicant_id')))
+    if request.method == 'POST':
+        student_id = request.form.get('student_id', '').strip()
+        email = request.form.get('email', '').strip()
+        
+        if not student_id or not email:
+            flash("Please enter both Student ID and Email.", "warning")
+            return render_template('applicant_login.html')
+            
+        conn = None
+        cursor = None
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute(
+                "SELECT * FROM Student WHERE Student_ID = %s AND Email_Address = %s",
+                (student_id, email)
+            )
+            student = cursor.fetchone()
+            if student:
+                session['applicant_id'] = student_id
+                session.pop('is_admin', None)
+                flash(f"Login successful! Welcome back, {student['Name']}.", "success")
+                return redirect(url_for('applicant_view', student_id=student_id))
+            else:
+                flash("No matching applicant found with those credentials. Please check your Student ID and Email.", "danger")
+        except Exception as e:
+            flash(f"Database login error: {str(e)}", "danger")
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+    return render_template('applicant_login.html')
+
+@app.route('/applicant/logout')
+def applicant_logout():
+    session.pop('applicant_id', None)
+    flash("You have successfully logged out.", "info")
+    return redirect(url_for('home'))
+
+@app.route('/applicant/view/<string:student_id>')
+def applicant_view(student_id):
+    if session.get('applicant_id') != student_id and not session.get('is_admin'):
+        flash("Access denied. You can only view your own application profile.", "danger")
+        return redirect(url_for('home'))
+        
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM Student WHERE Student_ID = %s", (student_id,))
+        student = cursor.fetchone()
+        if not student:
+            flash("Student profile not found.", "danger")
+            return redirect(url_for('home'))
+            
+        sub_class = None
+        other_scholar_cleaned = student.get('Other_Scholarship', '')
+        if other_scholar_cleaned:
+            match = re.search(r'\\[(.*?)\\]', other_scholar_cleaned)
+            if match:
+                sub_class = match.group(1)
+                other_scholar_cleaned = other_scholar_cleaned.replace(f'[{sub_class}]', '').strip()
+                
+        student['Scholar_Sub_Classification'] = sub_class
+        student['Other_Scholarship_Cleaned'] = other_scholar_cleaned
+        
+        cursor.execute("SELECT * FROM Family WHERE Student_ID = %s ORDER BY Family_ID ASC", (student_id,))
+        family = cursor.fetchall()
+        
+        cursor.execute("SELECT * FROM School WHERE Student_ID = %s ORDER BY School_From ASC", (student_id,))
+        schools = cursor.fetchall()
+        
+        cursor.execute("SELECT * FROM Extra_Curricular WHERE Student_ID = %s ORDER BY Extra_Curricular_Year ASC", (student_id,))
+        extracurs = cursor.fetchall()
+        
+        return render_template(
+            'view_scholar.html', 
+            student=student, 
+            family=family, 
+            schools=schools, 
+            extracurs=extracurs
+        )
+    except Exception as e:
+        flash(f"Database error loading dossier: {str(e)}", "danger")
+        return redirect(url_for('home'))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 # Load environment variables
 load_dotenv()
@@ -47,7 +201,8 @@ def clean_input(val, is_num=False, is_date=False):
             
     return val_str
 
-@app.route('/')
+@app.route('/admin')
+@admin_required
 def index():
     """
     Fetch all students, calculate statistics, and render the dashboard.
@@ -104,8 +259,8 @@ def index():
         if conn:
             conn.close()
 
-@app.route('/add', methods=['GET', 'POST'])
-def add():
+@app.route('/apply', methods=['GET', 'POST'])
+def apply():
     """
     Form to add a new Student, incorporating constraints and business validation rules.
     """
@@ -256,8 +411,9 @@ def add():
             cursor.execute(query, params)
             conn.commit()
             
-            flash(f"Scholar applicant `{name}` (ID: {student_id}) successfully registered!", "success")
-            return redirect(url_for('index'))
+            session['applicant_id'] = student_id
+            flash(f"Scholar applicant `{name}` (ID: {student_id}) successfully registered! You can now add family, school, and extracurricular details below.", "success")
+            return redirect(url_for('applicant_view', student_id=student_id))
             
         except mysql.connector.Error as err:
             if err.errno == 1062:
@@ -279,8 +435,9 @@ def add():
                 
     return render_template('add_scholar.html')
 
-@app.route('/edit/<string:id>', methods=['GET', 'POST'])
-def edit(id):
+@app.route('/admin/edit/<string:id>', methods=['GET', 'POST'])
+@admin_required
+def admin_edit(id):
     """
     Edit view for an existing scholar student, parsing custom columns.
     """
@@ -488,8 +645,9 @@ def edit(id):
 
     return render_template('edit_scholar.html', student=student)
 
-@app.route('/view/<string:id>')
-def view(id):
+@app.route('/admin/view/<string:id>')
+@admin_required
+def admin_view(id):
     """
     Renders the dossier (detailed review) profile for a candidate, 
     joining Student details with Family, School, and Extra-curricular activities.
@@ -551,8 +709,9 @@ def view(id):
         if conn:
             conn.close()
 
-@app.route('/delete/<string:id>', methods=['POST'])
-def delete(id):
+@app.route('/admin/delete/<string:id>', methods=['POST'])
+@admin_required
+def admin_delete(id):
     """
     Removes a student from the database. Child tables (Family, School, Extra-Curricular) 
     are automatically deleted by the ON DELETE CASCADE constraint.
@@ -577,6 +736,7 @@ def delete(id):
 # --- Relation Table Helpers ---
 
 @app.route('/view/<string:student_id>/add_family', methods=['POST'])
+@user_or_admin_required
 def add_family(student_id):
     """
     Inserts a family member linked to the student with sibling and working relative limits.
@@ -597,7 +757,7 @@ def add_family(student_id):
 
     if not role or not name:
         flash("Member Role and Name are required.", "warning")
-        return redirect(url_for('view', id=student_id))
+        return redirect_to_dossier(student_id)
 
     conn = None
     cursor = None
@@ -611,7 +771,7 @@ def add_family(student_id):
             sibling_count = cursor.fetchone()[0]
             if sibling_count >= 3:
                 flash("Family threshold limit exceeded: A maximum of three (3) siblings are allowed.", "warning")
-                return redirect(url_for('view', id=student_id))
+                return redirect_to_dossier(student_id)
                 
         # Enforce Business Rule: Institution employed relatives are limited to a max of 2
         if role == 'Relative' and employed == 1:
@@ -619,7 +779,7 @@ def add_family(student_id):
             relative_count = cursor.fetchone()[0]
             if relative_count >= 2:
                 flash("Family threshold limit exceeded: Relatives working in the institution are limited to a maximum of two (2) entries.", "warning")
-                return redirect(url_for('view', id=student_id))
+                return redirect_to_dossier(student_id)
         
         query = """
             INSERT INTO Family (
@@ -644,9 +804,10 @@ def add_family(student_id):
         if conn:
             conn.close()
             
-    return redirect(url_for('view', id=student_id))
+    return redirect_to_dossier(student_id)
 
 @app.route('/view/<string:student_id>/add_school', methods=['POST'])
+@user_or_admin_required
 def add_school(student_id):
     """
     Inserts a historical education level record linked to the student.
@@ -660,7 +821,7 @@ def add_school(student_id):
 
     if not level or not name or not address:
         flash("Education Level, School Name, and Address are required.", "warning")
-        return redirect(url_for('view', id=student_id))
+        return redirect_to_dossier(student_id)
 
     conn = None
     cursor = None
@@ -683,9 +844,10 @@ def add_school(student_id):
         if conn:
             conn.close()
             
-    return redirect(url_for('view', id=student_id))
+    return redirect_to_dossier(student_id)
 
 @app.route('/view/<string:student_id>/add_extracur', methods=['POST'])
+@user_or_admin_required
 def add_extracur(student_id):
     """
     Inserts an extra-curricular activity record linked to the student.
@@ -696,7 +858,7 @@ def add_extracur(student_id):
 
     if not name:
         flash("Activity Name is required.", "warning")
-        return redirect(url_for('view', id=student_id))
+        return redirect_to_dossier(student_id)
 
     conn = None
     cursor = None
@@ -719,9 +881,10 @@ def add_extracur(student_id):
         if conn:
             conn.close()
             
-    return redirect(url_for('view', id=student_id))
+    return redirect_to_dossier(student_id)
 
 @app.route('/delete_relation/<string:student_id>/<string:relation>/<int:id>', methods=['POST'])
+@user_or_admin_required
 def delete_relation(student_id, relation, id):
     """
     Utility route to delete an item from child tables (Family, School, Extra_Curricular).
@@ -734,7 +897,7 @@ def delete_relation(student_id, relation, id):
     
     if relation not in table_map:
         flash("Invalid relation parameter.", "danger")
-        return redirect(url_for('view', id=student_id))
+        return redirect_to_dossier(student_id)
         
     table_name, col_name = table_map[relation]
     
@@ -754,9 +917,10 @@ def delete_relation(student_id, relation, id):
         if conn:
             conn.close()
             
-    return redirect(url_for('view', id=student_id))
+    return redirect_to_dossier(student_id)
 
 @app.route('/view/<string:student_id>/edit_family/<int:id>', methods=['POST'])
+@user_or_admin_required
 def edit_family(student_id, id):
     """
     Updates a family member linked to the student with sibling and working relative limits.
@@ -777,7 +941,7 @@ def edit_family(student_id, id):
 
     if not role or not name:
         flash("Member Role and Name are required.", "warning")
-        return redirect(url_for('view', id=student_id))
+        return redirect_to_dossier(student_id)
 
     conn = None
     cursor = None
@@ -791,7 +955,7 @@ def edit_family(student_id, id):
             sibling_count = cursor.fetchone()[0]
             if sibling_count >= 3:
                 flash("Family threshold limit exceeded: A maximum of three (3) siblings are allowed.", "warning")
-                return redirect(url_for('view', id=student_id))
+                return redirect_to_dossier(student_id)
                 
         # Enforce Business Rule: Institution employed relatives are limited to a max of 2
         if role == 'Relative' and employed == 1:
@@ -799,7 +963,7 @@ def edit_family(student_id, id):
             relative_count = cursor.fetchone()[0]
             if relative_count >= 2:
                 flash("Family threshold limit exceeded: Relatives working in the institution are limited to a maximum of two (2) entries.", "warning")
-                return redirect(url_for('view', id=student_id))
+                return redirect_to_dossier(student_id)
         
         query = """
             UPDATE Family SET
@@ -825,9 +989,10 @@ def edit_family(student_id, id):
         if conn:
             conn.close()
             
-    return redirect(url_for('view', id=student_id))
+    return redirect_to_dossier(student_id)
 
 @app.route('/view/<string:student_id>/edit_school/<int:id>', methods=['POST'])
+@user_or_admin_required
 def edit_school(student_id, id):
     """
     Updates a historical education level record linked to the student.
@@ -841,7 +1006,7 @@ def edit_school(student_id, id):
 
     if not level or not name or not address:
         flash("Education Level, School Name, and Address are required.", "warning")
-        return redirect(url_for('view', id=student_id))
+        return redirect_to_dossier(student_id)
 
     conn = None
     cursor = None
@@ -864,9 +1029,10 @@ def edit_school(student_id, id):
         if conn:
             conn.close()
             
-    return redirect(url_for('view', id=student_id))
+    return redirect_to_dossier(student_id)
 
 @app.route('/view/<string:student_id>/edit_extracur/<int:id>', methods=['POST'])
+@user_or_admin_required
 def edit_extracur(student_id, id):
     """
     Updates an extra-curricular activity record linked to the student.
@@ -877,7 +1043,7 @@ def edit_extracur(student_id, id):
 
     if not name:
         flash("Activity Name is required.", "warning")
-        return redirect(url_for('view', id=student_id))
+        return redirect_to_dossier(student_id)
 
     conn = None
     cursor = None
@@ -900,7 +1066,7 @@ def edit_extracur(student_id, id):
         if conn:
             conn.close()
             
-    return redirect(url_for('view', id=student_id))
+    return redirect_to_dossier(student_id)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
