@@ -6,6 +6,11 @@ import pymysql.cursors
 from dotenv import load_dotenv
 from datetime import datetime
 
+# Load environment variables and initialize Flask app
+load_dotenv()
+app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', 'scholarship_db_secret_key_123!')
+
 # Decorators for auth
 def admin_required(f):
     @wraps(f)
@@ -159,11 +164,7 @@ def applicant_view(student_id):
         if conn:
             conn.close()
 
-# Load environment variables
-load_dotenv()
 
-app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', 'scholarship_db_secret_key_123!')
 
 def get_db_connection():
     """
