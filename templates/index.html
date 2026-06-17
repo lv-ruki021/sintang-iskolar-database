@@ -31,7 +31,7 @@
 
 <!-- Stats Cards Section -->
 <div class="stats-grid" id="stats-grid-dashboard">
-    <div class="stat-card" id="stat-card-total">
+    <div class="stat-card" id="stat-card-total" onclick="openModal('modal-total-scholars')">
         <div class="stat-card-info">
             <span class="stat-label">Total Scholars</span>
             <span class="stat-value">{{ stats.total }}</span>
@@ -41,17 +41,17 @@
         </div>
     </div>
     
-    <div class="stat-card" id="stat-card-gwa">
+    <div class="stat-card" id="stat-card-gwa" onclick="openModal('modal-average-gwa')">
         <div class="stat-card-info">
             <span class="stat-label">Average GWA</span>
-            <span class="stat-value">{{ stats.avg_gwa }} <span class="gpa-scale">%</span></span>
+            <span class="stat-value">{{ stats.avg_gwa }}<span class="gpa-scale">%</span></span>
         </div>
         <div class="stat-card-icon gpa">
             <i class="fa-solid fa-award"></i>
         </div>
     </div>
     
-    <div class="stat-card" id="stat-card-approved">
+    <div class="stat-card" id="stat-card-approved" onclick="openModal('modal-merit-scholars')">
         <div class="stat-card-info">
             <span class="stat-label">Merit Scholars</span>
             <span class="stat-value text-approved">{{ stats.merit }}</span>
@@ -60,8 +60,18 @@
             <i class="fa-solid fa-star"></i>
         </div>
     </div>
+
+    <div class="stat-card" id="stat-card-financial" onclick="openModal('modal-financial-scholars')">
+        <div class="stat-card-info">
+            <span class="stat-label">Financial Aid</span>
+            <span class="stat-value text-financial">{{ stats.fin_aid }}</span>
+        </div>
+        <div class="stat-card-icon financial">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+        </div>
+    </div>
     
-    <div class="stat-card" id="stat-card-pending">
+    <div class="stat-card" id="stat-card-pending" onclick="openModal('modal-working-students')">
         <div class="stat-card-info">
             <span class="stat-label">Working Students</span>
             <span class="stat-value text-pending">{{ stats.working_pct }}<span class="gpa-scale">%</span></span>
@@ -74,9 +84,27 @@
 
 <!-- Table Card Container -->
 <div class="table-card" id="applicants-table-card">
-    <div class="table-card-header">
+    <div class="table-card-header" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         <h2 class="card-title" id="table-card-title"><i class="fa-solid fa-address-book"></i> Registered Scholar Dossiers</h2>
-        <span class="badge badge-info">{{ students|length }} Scholars Listed</span>
+        
+        <div class="table-controls">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="admin-search-input" onkeyup="filterAdminTable()" placeholder="Search name, ID, college...">
+            </div>
+            
+            <div class="sort-box">
+                <i class="fa-solid fa-arrow-down-a-z sort-icon"></i>
+                <select id="admin-sort-select" onchange="sortAdminTable()">
+                    <option value="name-asc">Sort: Name (A-Z)</option>
+                    <option value="name-desc">Sort: Name (Z-A)</option>
+                    <option value="id-asc">Sort: ID (Ascending)</option>
+                    <option value="id-desc">Sort: ID (Descending)</option>
+                    <option value="type-asc">Sort: Merit First</option>
+                    <option value="type-desc">Sort: Financial Aid First</option>
+                </select>
+            </div>
+        </div>
     </div>
     
     <div class="table-responsive">
@@ -160,4 +188,313 @@
         {% endif %}
     </div>
 </div>
+<!-- Modals for Clickable Metrics Cards -->
+
+<!-- Modal 1: Total Scholars Summary -->
+<div class="modal-overlay" id="modal-total-scholars" onclick="closeModalOnOverlayClick(event, 'modal-total-scholars')">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-users"></i> Total Scholars Summary</h3>
+            <button class="modal-close-btn" onclick="closeModal('modal-total-scholars')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="summary-modal-grid">
+                <div class="summary-modal-stat-box">
+                    <span class="stat-label">Freshmen</span>
+                    <span class="stat-value">{{ stats.freshmen_scholars|length }}</span>
+                </div>
+                <div class="summary-modal-stat-box">
+                    <span class="stat-label">Upperclassmen</span>
+                    <span class="stat-value">{{ stats.upperclassmen_scholars|length }}</span>
+                </div>
+                <div class="summary-modal-stat-box">
+                    <span class="stat-label">Merit Scholars</span>
+                    <span class="stat-value">{{ stats.merit }}</span>
+                </div>
+                <div class="summary-modal-stat-box">
+                    <span class="stat-label">Financial Aid</span>
+                    <span class="stat-value">{{ stats.fin_aid }}</span>
+                </div>
+            </div>
+            <h4>Enrollment Breakdown</h4>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Classification</th>
+                        <th>Type</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Freshmen</td>
+                        <td>Merit</td>
+                        <td>{{ stats.freshmen_scholars|selectattr('Scholarship_Type', 'equalto', 'Merit')|list|length }}</td>
+                    </tr>
+                    <tr>
+                        <td>Freshmen</td>
+                        <td>Financial Aid</td>
+                        <td>{{ stats.freshmen_scholars|selectattr('Scholarship_Type', 'equalto', 'Financial Aid')|list|length }}</td>
+                    </tr>
+                    <tr>
+                        <td>Upperclassmen</td>
+                        <td>Merit</td>
+                        <td>{{ stats.upperclassmen_scholars|selectattr('Scholarship_Type', 'equalto', 'Merit')|list|length }}</td>
+                    </tr>
+                    <tr>
+                        <td>Upperclassmen</td>
+                        <td>Financial Aid</td>
+                        <td>{{ stats.upperclassmen_scholars|selectattr('Scholarship_Type', 'equalto', 'Financial Aid')|list|length }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 2: Average GWA Summary -->
+<div class="modal-overlay" id="modal-average-gwa" onclick="closeModalOnOverlayClick(event, 'modal-average-gwa')">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-award"></i> Average GWA Breakdown</h3>
+            <button class="modal-close-btn" onclick="closeModal('modal-average-gwa')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="summary-modal-grid">
+                <div class="summary-modal-stat-box">
+                    <span class="stat-label">Freshmen Avg GWA</span>
+                    <span class="stat-value">{{ stats.avg_freshman_gwa }}%</span>
+                </div>
+                <div class="summary-modal-stat-box">
+                    <span class="stat-label">Upperclassmen Avg GWA</span>
+                    <span class="stat-value">{{ stats.avg_upper_gwa }}</span>
+                </div>
+            </div>
+            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; background-color: #f8fafc; padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                <strong>💡 Grading Scale Context:</strong><br>
+                - **Freshmen GWA**: Represents high school Grade 12 averages (percentage scale where 100% is the maximum).<br>
+                - **Upperclassmen GWA**: Represents college grading scales (typically 1.0 to 5.0, where 1.0 is the highest possible grade and 5.0 is failing).
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 3: Merit Scholars List -->
+<div class="modal-overlay" id="modal-merit-scholars" onclick="closeModalOnOverlayClick(event, 'modal-merit-scholars')">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-star"></i> Merit Scholars List</h3>
+            <button class="modal-close-btn" onclick="closeModal('modal-merit-scholars')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Program</th>
+                        <th>GWA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scholar in stats.merit_scholars %}
+                        <tr>
+                            <td><code>{{ scholar.Student_ID }}</code></td>
+                            <td><strong>{{ scholar.Name }}</strong></td>
+                            <td>{{ scholar.Program }}</td>
+                            <td>{{ scholar.Grade_12_GWA }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="4" class="summary-empty-state">No Merit Scholars registered.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 4: Financial Aid Scholars List -->
+<div class="modal-overlay" id="modal-financial-scholars" onclick="closeModalOnOverlayClick(event, 'modal-financial-scholars')">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-hand-holding-dollar"></i> Financial Aid Scholars List</h3>
+            <button class="modal-close-btn" onclick="closeModal('modal-financial-scholars')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Program</th>
+                        <th>Household Income</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scholar in stats.financial_scholars %}
+                        <tr>
+                            <td><code>{{ scholar.Student_ID }}</code></td>
+                            <td><strong>{{ scholar.Name }}</strong></td>
+                            <td>{{ scholar.Program }}</td>
+                            <td>₱{{ "{:,.2f}".format(scholar.Total_Annual_Household_Income) if scholar.Total_Annual_Household_Income is not none else '0.00' }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="4" class="summary-empty-state">No Financial Aid Scholars registered.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 5: Working Students List -->
+<div class="modal-overlay" id="modal-working-students" onclick="closeModalOnOverlayClick(event, 'modal-working-students')">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-briefcase"></i> Working Students List</h3>
+            <button class="modal-close-btn" onclick="closeModal('modal-working-students')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Job Title</th>
+                        <th>Scholarship Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scholar in stats.working_scholars %}
+                        <tr>
+                            <td><code>{{ scholar.Student_ID }}</code></td>
+                            <td><strong>{{ scholar.Name }}</strong></td>
+                            <td>{{ scholar.Job_Title if scholar.Job_Title else 'Not specified' }}</td>
+                            <td>{{ scholar.Scholarship_Type }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="4" class="summary-empty-state">No Working Students registered.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Modal controls
+    function openModal(id) {
+        document.getElementById(id).classList.add('active');
+        document.body.style.overflow = 'hidden'; // Lock background scrolling
+    }
+    
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+        document.body.style.overflow = ''; // Restore background scrolling
+    }
+    
+    function closeModalOnOverlayClick(event, id) {
+        if (event.target.id === id) {
+            closeModal(id);
+        }
+    }
+
+    // Client-side Searching
+    function filterAdminTable() {
+        const input = document.getElementById("admin-search-input");
+        const filter = input.value.toLowerCase().trim();
+        const table = document.getElementById("applicants-data-table");
+        
+        if (!table) return;
+        
+        const tbody = table.getElementsByTagName("tbody")[0];
+        const trs = tbody.getElementsByTagName("tr");
+        
+        for (let i = 0; i < trs.length; i++) {
+            const tr = trs[i];
+            const idCell = tr.cells[0]?.textContent || "";
+            const nameCell = tr.cells[1]?.textContent || "";
+            const acadCell = tr.cells[2]?.textContent || "";
+            const classCell = tr.cells[3]?.textContent || "";
+            const typeCell = tr.cells[4]?.textContent || "";
+            
+            const combinedText = (idCell + " " + nameCell + " " + acadCell + " " + classCell + " " + typeCell).toLowerCase();
+            
+            if (combinedText.includes(filter)) {
+                tr.style.display = "";
+            } else {
+                tr.style.display = "none";
+            }
+        }
+    }
+
+    // Client-side Sorting
+    function sortAdminTable() {
+        const select = document.getElementById("admin-sort-select");
+        const val = select.value;
+        const table = document.getElementById("applicants-data-table");
+        
+        if (!table) return;
+        
+        const tbody = table.getElementsByTagName("tbody")[0];
+        const rows = Array.from(tbody.getElementsByTagName("tr"));
+        
+        let comparator;
+        
+        switch (val) {
+            case "name-asc":
+                comparator = (a, b) => {
+                    const nameA = a.querySelector(".full-name")?.textContent.trim().toLowerCase() || "";
+                    const nameB = b.querySelector(".full-name")?.textContent.trim().toLowerCase() || "";
+                    return nameA.localeCompare(nameB);
+                };
+                break;
+            case "name-desc":
+                comparator = (a, b) => {
+                    const nameA = a.querySelector(".full-name")?.textContent.trim().toLowerCase() || "";
+                    const nameB = b.querySelector(".full-name")?.textContent.trim().toLowerCase() || "";
+                    return nameB.localeCompare(nameA);
+                };
+                break;
+            case "id-asc":
+                comparator = (a, b) => {
+                    const idA = a.querySelector(".student-id-badge")?.textContent.trim() || "";
+                    const idB = b.querySelector(".student-id-badge")?.textContent.trim() || "";
+                    return idA.localeCompare(idB);
+                };
+                break;
+            case "id-desc":
+                comparator = (a, b) => {
+                    const idA = a.querySelector(".student-id-badge")?.textContent.trim() || "";
+                    const idB = b.querySelector(".student-id-badge")?.textContent.trim() || "";
+                    return idB.localeCompare(idA);
+                };
+                break;
+            case "type-asc":
+                comparator = (a, b) => {
+                    const typeA = a.cells[4]?.textContent.trim().toLowerCase() || "";
+                    const typeB = b.cells[4]?.textContent.trim().toLowerCase() || "";
+                    if (typeA.includes("merit") && !typeB.includes("merit")) return -1;
+                    if (!typeA.includes("merit") && typeB.includes("merit")) return 1;
+                    return 0;
+                };
+                break;
+            case "type-desc":
+                comparator = (a, b) => {
+                    const typeA = a.cells[4]?.textContent.trim().toLowerCase() || "";
+                    const typeB = b.cells[4]?.textContent.trim().toLowerCase() || "";
+                    if (typeA.includes("financial") && !typeB.includes("financial")) return -1;
+                    if (!typeA.includes("financial") && typeB.includes("financial")) return 1;
+                    return 0;
+                };
+                break;
+            default:
+                return;
+        }
+        
+        rows.sort(comparator);
+        rows.forEach(row => tbody.appendChild(row));
+    }
+</script>
+
 {% endblock %}

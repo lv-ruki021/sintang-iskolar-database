@@ -221,32 +221,51 @@ def index():
         
         # Calculate statistics
         total_students = len(students)
-        merit_count = sum(1 for s in students if s['Scholarship_Type'] == 'Merit')
-        fin_aid_count = sum(1 for s in students if s['Scholarship_Type'] == 'Financial Aid')
-        working_count = sum(1 for s in students if s['Working_Student'] == 1)
+        merit_scholars = [s for s in students if s['Scholarship_Type'] == 'Merit']
+        financial_scholars = [s for s in students if s['Scholarship_Type'] == 'Financial Aid']
+        working_scholars = [s for s in students if s['Working_Student'] == 1]
+        freshmen_scholars = [s for s in students if s['Scholar_Classification'] == 'Freshmen']
+        upperclassmen_scholars = [s for s in students if s['Scholar_Classification'] == 'Upperclassman']
+
+        merit_count = len(merit_scholars)
+        fin_aid_count = len(financial_scholars)
+        working_count = len(working_scholars)
         
         # Calculate Working Students percentage
         working_pct = 0.0
         if total_students > 0:
             working_pct = (working_count / total_students) * 100
             
-        # Calculate overall Average GWA (Grade 12 GWA for Freshmen, or College GWA for Upperclassmen)
+        # Calculate overall and split average GWAs
         gwa_values = []
+        freshmen_gwas = []
+        upper_gwas = []
         for s in students:
             if s['Grade_12_GWA'] is not None:
                 gwa_values.append(float(s['Grade_12_GWA']))
-            elif s['Grade_11_GWA'] is not None and s['Scholar_Classification'] == 'Freshmen':
-                # For Upperclassman, Grade_11_GWA stores Lowest Subject Grade, not GWA
-                gwa_values.append(float(s['Grade_11_GWA']))
+                if s['Scholar_Classification'] == 'Freshmen':
+                    freshmen_gwas.append(float(s['Grade_12_GWA']))
+                else:
+                    upper_gwas.append(float(s['Grade_12_GWA']))
                 
         avg_gwa = sum(gwa_values) / len(gwa_values) if gwa_values else 0.0
+        avg_freshman_gwa = sum(freshmen_gwas) / len(freshmen_gwas) if freshmen_gwas else 0.0
+        avg_upper_gwa = sum(upper_gwas) / len(upper_gwas) if upper_gwas else 0.0
         
         stats = {
             'total': total_students,
             'merit': merit_count,
             'fin_aid': fin_aid_count,
             'working_pct': round(working_pct, 1),
-            'avg_gwa': round(avg_gwa, 2)
+            'working_count': working_count,
+            'avg_gwa': round(avg_gwa, 2),
+            'avg_freshman_gwa': round(avg_freshman_gwa, 2),
+            'avg_upper_gwa': round(avg_upper_gwa, 2),
+            'merit_scholars': merit_scholars,
+            'financial_scholars': financial_scholars,
+            'working_scholars': working_scholars,
+            'freshmen_scholars': freshmen_scholars,
+            'upperclassmen_scholars': upperclassmen_scholars
         }
         
         return render_template('index.html', students=students, stats=stats)
@@ -266,6 +285,9 @@ def apply():
     """
     Form to add a new Student, incorporating constraints and business validation rules.
     """
+    if session.get('applicant_id'):
+        flash("You are already registered in the database. You can manage your profile here.", "warning")
+        return redirect(url_for('applicant_view', student_id=session.get('applicant_id')))
     if request.method == 'POST':
         # Extract fields
         student_id = clean_input(request.form.get('Student_ID'))
