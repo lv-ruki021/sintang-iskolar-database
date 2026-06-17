@@ -140,6 +140,10 @@ def applicant_view(student_id):
         student['Scholar_Sub_Classification'] = sub_class
         student['Other_Scholarship_Cleaned'] = other_scholar_cleaned
         
+        if student['Scholar_Classification'] == 'Upperclassman':
+            student['Lowest_Subject_Grade'] = student['Grade_11_GWA']
+            student['College_GWA'] = student['Grade_12_GWA']
+        
         cursor.execute("SELECT * FROM Family WHERE Student_ID = %s ORDER BY Family_ID ASC", (student_id,))
         family = cursor.fetchall()
         
@@ -728,6 +732,10 @@ def admin_view(id):
                 
         student['Scholar_Sub_Classification'] = sub_class
         student['Other_Scholarship_Cleaned'] = other_scholar_cleaned
+        
+        if student['Scholar_Classification'] == 'Upperclassman':
+            student['Lowest_Subject_Grade'] = student['Grade_11_GWA']
+            student['College_GWA'] = student['Grade_12_GWA']
             
         # 2. Fetch Family members
         cursor.execute("SELECT * FROM Family WHERE Student_ID = %s ORDER BY Family_ID ASC", (id,))

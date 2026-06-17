@@ -135,7 +135,7 @@
                     <label for="Scholar_Sub_Classification"><i class="fa-solid fa-sliders"></i> Scholar Sub-Classification <span class="required-asterisk">*</span></label>
                     <select id="Scholar_Sub_Classification" name="Scholar_Sub_Classification">
                         <option value="">Select Option</option>
-                        <option value="Existing Scholar" {% if form_data and form_data.Scholar_Sub_Classification == 'Existing Scholar' %}selected{% endif %}>Existing Scholar (Renewal)</option>
+                        <option value="Existing Scholar" {% if form_data and form_data.Scholar_Sub_Classification == 'Existing Scholar' %}selected{% endif %}>Existing Scholar</option>
                         <option value="Prospective Scholar" {% if form_data and form_data.Scholar_Sub_Classification == 'Prospective Scholar' %}selected{% endif %}>Prospective Scholar (First-time)</option>
                     </select>
                 </div>
