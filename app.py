@@ -203,6 +203,19 @@ def clean_input(val, is_num=False, is_date=False):
             
     return val_str
 
+def round_to_closest_standard(grade):
+    """
+    Rounds a college grade to the closest standard step (1.00, 1.25, ..., 3.00, 5.00).
+    """
+    if grade is None:
+        return None
+    try:
+        grade = float(grade)
+        standards = [1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00, 5.00]
+        return min(standards, key=lambda x: abs(x - grade))
+    except (ValueError, TypeError):
+        return None
+
 @app.route('/admin')
 @admin_required
 def index():
@@ -329,13 +342,15 @@ def apply():
                 
         # Parse grades and GWA
         lowest_subject_grade = clean_input(request.form.get('Lowest_Subject_Grade'), is_num=True)
+        if scholar_classification == 'Upperclassman':
+            lowest_subject_grade = round_to_closest_standard(lowest_subject_grade)
         
         if scholar_classification == 'Freshmen':
             grade_11_gwa = clean_input(request.form.get('Grade_11_GWA'), is_num=True)
             grade_12_gwa = clean_input(request.form.get('Grade_12_GWA'), is_num=True)
         else:
             # For Upperclassmen, we store College GWA in Grade_12_GWA and Lowest Subject Grade in Grade_11_GWA
-            grade_12_gwa = clean_input(request.form.get('College_GWA'), is_num=True)
+            grade_12_gwa = round_to_closest_standard(clean_input(request.form.get('College_GWA'), is_num=True))
             grade_11_gwa = lowest_subject_grade
             
         house_ownership = clean_input(request.form.get('House_Ownership'))
@@ -546,12 +561,14 @@ def admin_edit(id):
                 other_scholarship = f"[{scholar_sub_class}]"
                 
         lowest_subject_grade = clean_input(request.form.get('Lowest_Subject_Grade'), is_num=True)
+        if scholar_classification == 'Upperclassman':
+            lowest_subject_grade = round_to_closest_standard(lowest_subject_grade)
         
         if scholar_classification == 'Freshmen':
             grade_11_gwa = clean_input(request.form.get('Grade_11_GWA'), is_num=True)
             grade_12_gwa = clean_input(request.form.get('Grade_12_GWA'), is_num=True)
         else:
-            grade_12_gwa = clean_input(request.form.get('College_GWA'), is_num=True)
+            grade_12_gwa = round_to_closest_standard(clean_input(request.form.get('College_GWA'), is_num=True))
             grade_11_gwa = lowest_subject_grade
             
         house_ownership = clean_input(request.form.get('House_Ownership'))
