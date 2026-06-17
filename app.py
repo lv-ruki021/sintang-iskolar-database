@@ -360,6 +360,8 @@ def apply():
         if not civil_status: errors.append("Civil Status is required.")
         if not citizenship: errors.append("Citizenship is required.")
         if not proof_of_income: errors.append("Proof of Income document name is required.")
+        if not house_ownership: errors.append("House Ownership is required.")
+        if total_annual_income is None: errors.append("Total Annual Household Income is required.")
 
         # Business Rule: Only regular students can apply
         if not is_regular:
@@ -573,6 +575,8 @@ def admin_edit(id):
         if not civil_status: errors.append("Civil Status is required.")
         if not citizenship: errors.append("Citizenship is required.")
         if not proof_of_income: errors.append("Proof of Income document name is required.")
+        if not house_ownership: errors.append("House Ownership is required.")
+        if total_annual_income is None: errors.append("Total Annual Household Income is required.")
 
         # Business Rule Check
         if not is_regular:

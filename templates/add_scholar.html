@@ -201,13 +201,17 @@
 
             <div class="form-row">
                 <div class="form-group col-6">
-                    <label for="House_Ownership"><i class="fa-solid fa-house-laptop"></i> House Ownership</label>
-                    <input type="text" id="House_Ownership" name="House_Ownership" placeholder="e.g. Owned, Rented" maxlength="50"
-                           value="{{ form_data.House_Ownership if form_data else '' }}">
+                    <label for="House_Ownership"><i class="fa-solid fa-house-laptop"></i> House Ownership <span class="required-asterisk">*</span></label>
+                    <select id="House_Ownership" name="House_Ownership" required>
+                        <option value="">Select Option</option>
+                        <option value="Owned" {% if form_data and form_data.House_Ownership == 'Owned' %}selected{% endif %}>Owned</option>
+                        <option value="Rented" {% if form_data and form_data.House_Ownership == 'Rented' %}selected{% endif %}>Rented</option>
+                        <option value="Pay to Own" {% if form_data and form_data.House_Ownership == 'Pay to Own' %}selected{% endif %}>Pay to Own</option>
+                    </select>
                 </div>
                 <div class="form-group col-6">
-                    <label for="Total_Annual_Household_Income"><i class="fa-solid fa-money-bill-wave"></i> Total Annual Income</label>
-                    <input type="number" id="Total_Annual_Household_Income" name="Total_Annual_Household_Income" placeholder="0.00 to 1,000,000.00" step="0.01" min="0" max="1000000"
+                    <label for="Total_Annual_Household_Income"><i class="fa-solid fa-money-bill-wave"></i> Total Annual Income <span class="required-asterisk">*</span></label>
+                    <input type="number" id="Total_Annual_Household_Income" name="Total_Annual_Household_Income" placeholder="0.00 to 1,000,000.00" step="0.01" min="0" max="1000000" required
                            value="{{ form_data.Total_Annual_Household_Income if form_data else '' }}">
                     <small class="form-text" id="income-rule-text">Must not exceed ₱200,000 to qualify for Financial Aid.</small>
                 </div>
